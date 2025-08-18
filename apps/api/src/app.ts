@@ -13,6 +13,10 @@ import {
 } from "./routes/secure-image-url.js";
 import { supabaseAuth } from "./middleware/auth.js";
 import { CreateUserInDBHandler, CreateUserInDB } from "./routes/auth.js";
+import {
+  createTemplateRoute,
+  createTemplateHandler,
+} from "./routes/template.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -37,7 +41,7 @@ app.onError((err, c) => {
   );
 });
 
-//app.use("/", supabaseAuth)
+app.use("/template", supabaseAuth)
 
 //authentication
 app.openapi(CreateUserInDB, CreateUserInDBHandler )
@@ -45,6 +49,7 @@ app.openapi(CreateUserInDB, CreateUserInDBHandler )
 app.openapi(getUsersRoute,  getUsersHandler)
 app.openapi(createPostRoute, createPostHandler);
 app.openapi(getSecureImageUrlRoute, getSecureImageUrlHandler);
+app.openapi(createTemplateRoute, createTemplateHandler);
 
 
 

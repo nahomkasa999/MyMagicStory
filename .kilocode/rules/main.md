@@ -1,5 +1,9 @@
 # RULES MUST BE APPLIED
 
+# Before implementing, editing file or adding anycode ask for comformation to edit it, -> the  user will study your code and give you recommendation or approve your code
+
+# never create a component that could be imported form shadcn
+
 # ZOD USAGE
 z.email();
 z.uuid();
@@ -21,3 +25,16 @@ z.iso.date();
 z.iso.time();
 z.iso.datetime();
 z.iso.duration();
+
+# Fetching Rules
+When ever you want to fetch anything on the frontend you must use @better-fetch/fetch + @tanstack/react-query in combinanation.
+
+# Types
+for Frontend there is a types folder. 
+when ever you what to creat interface, type, zod schema, you must use this folder. then export the file and use those where needed.
+
+
+# Forbiden 
+-> never run tests with out the user permission. specially for npm run dev, pnpm run dev, or any from of test.
+-> the user is the tester and will provide you with the neccessary tests you need.
+
