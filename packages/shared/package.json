@@ -1,0 +1,24 @@
+{
+  "name": "@mymagicstory/shared",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc"
+  },
+  "exports": {
+    "./types": {
+      "types": "./src/types/index.ts",
+      "default": "./dist/types/index.js"
+    }
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "latest"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^1.0.2",
+    "@types/sanitize-html": "^2.16.0",
+    "sanitize-html": "^2.17.0",
+    "zod": "^4.0.10"
+  }
+}
