@@ -11,10 +11,10 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const session = useSession();
-
+  
   React.useEffect(() => {
-    if (session) {
-      router.push("/dashboard");
+    if (session.session) {
+      // router.push("/dashboard");
     }
   }, [session, router]);
   
