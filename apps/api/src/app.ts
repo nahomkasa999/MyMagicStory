@@ -11,7 +11,7 @@ import {
   getSecureImageUrlRoute,
   getSecureImageUrlHandler,
 } from "./routes/secure-image-url.js";
-
+import { supabaseAuth } from "./middleware/auth.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -35,9 +35,9 @@ app.onError((err, c) => {
     500
   );
 });
+app.use("/", supabaseAuth)
 
-
-app.openapi(getUsersRoute, getUsersHandler)
+app.openapi(getUsersRoute,  getUsersHandler)
 app.openapi(createPostRoute, createPostHandler);
 app.openapi(getSecureImageUrlRoute, getSecureImageUrlHandler);
 

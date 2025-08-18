@@ -15,5 +15,7 @@ export const getUsersRoute = createRoute({
   },
 });
 export const getUsersHandler = async (c: Context) => {
+  const user = c.get("user")
+  console.log(user)
   return c.json({"Hellow" : "we have made it this far"});
 };
