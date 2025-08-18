@@ -62,7 +62,7 @@ export default function SignupPage() {
         email: values.email,
         password: values.password,
       });
-      router.push('/dashboard')
+      router.push('/signin')
     } catch (error) {
       console.error('Signup error:', error)
     } finally {
