@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
+import { Navbar } from "@/app/(landing)/_components/navbar";
 
 export const metadata: Metadata = {
-  title: "Perkly",
-  // description: "Perkly is a platform for creating and managing your organization's perks",
+  title: "Mymagicstory",
 };
 
 export default function RootLayout({
@@ -12,8 +11,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ReactQueryProvider>
+    <div>
+      <Navbar />
       {children}
-    </ReactQueryProvider>
+    </div>
   );
 }

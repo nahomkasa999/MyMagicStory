@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "./(landing)/_components/navbar";
+import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 
 
 export const metadata: Metadata = {
@@ -18,8 +19,9 @@ export default function RootLayout({
       <body
         className={`antialiased`}
       >
-          <Navbar />
+          <ReactQueryProvider>
           {children}
+          </ReactQueryProvider>
       </body>
     </html>
   );

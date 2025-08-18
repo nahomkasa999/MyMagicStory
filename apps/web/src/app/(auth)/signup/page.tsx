@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Eye, EyeOff, Mail, User, Lock, Chrome } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -19,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuth } from '../_hook/useAuth'
 
 const signupSchema = z.object({
   username: z
@@ -43,6 +43,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const { login, signup } = useAuth();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -56,10 +57,11 @@ export default function SignupPage() {
   const onSubmit = async (values: SignupFormValues) => {
     setIsLoading(true)
     try {
-      // TODO: Implement signup logic
-      console.log('Signup values:', values)
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      signup.mutate({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+      });
       router.push('/dashboard')
     } catch (error) {
       console.error('Signup error:', error)
@@ -71,9 +73,7 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     setIsGoogleLoading(true)
     try {
-      // TODO: Implement Google signup logic
       console.log('Google signup clicked')
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000))
       router.push('/dashboard')
     } catch (error) {
@@ -85,28 +85,23 @@ export default function SignupPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
+      <Card className="w-full max-w-sm shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">
+          <CardTitle className="text-2xl font-bold tracking-tight">
             Create Account
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription className="text-sm text-muted-foreground">
             Enter your details to create your account
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {/* Google Signup Button */}
           <Button
             variant="outline"
-            className="w-full h-11 text-sm font-medium border-2 hover:bg-accent/50 transition-all duration-200"
+            className="w-full h-9 text-sm font-medium border-2 hover:bg-accent/50 transition-all duration-200"
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading || isLoading}
           >
-            {isGoogleLoading ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Chrome className="w-5 h-5 mr-2" />
-            )}
             Continue with Google
           </Button>
 
@@ -124,7 +119,7 @@ export default function SignupPage() {
 
           {/* Signup Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
               {/* Username Field */}
               <FormField
                 control={form.control}
@@ -134,10 +129,10 @@ export default function SignupPage() {
                     <FormLabel className="text-sm font-medium">Username</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <User className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" />
                         <Input
                           placeholder="Enter your username"
-                          className="pl-10 h-11 border-2 focus:border-primary transition-colors"
+                          className="pl-9 h-9 text-sm border-2 focus:border-primary transition-colors"
                           {...field}
                         />
                       </div>
@@ -156,11 +151,11 @@ export default function SignupPage() {
                     <FormLabel className="text-sm font-medium">Email</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Mail className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" />
                         <Input
                           type="email"
                           placeholder="Enter your email"
-                          className="pl-10 h-11 border-2 focus:border-primary transition-colors"
+                          className="pl-9 h-9 text-sm border-2 focus:border-primary transition-colors"
                           {...field}
                         />
                       </div>
@@ -179,24 +174,24 @@ export default function SignupPage() {
                     <FormLabel className="text-sm font-medium">Password</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Lock className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" />
                         <Input
                           type={showPassword ? 'text' : 'password'}
                           placeholder="Create a password"
-                          className="pl-10 pr-10 h-11 border-2 focus:border-primary transition-colors"
+                          className="pl-9 pr-9 h-9 text-sm border-2 focus:border-primary transition-colors"
                           {...field}
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          className="absolute right-0 top-0 h-full px-2.5 py-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                            <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
+                            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                           )}
                         </Button>
                       </div>
@@ -209,7 +204,7 @@ export default function SignupPage() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-11 text-sm font-medium bg-primary hover:bg-primary/90 transition-all duration-200"
+                className="w-full h-9 text-sm font-medium bg-primary hover:bg-primary/90 transition-all duration-200"
                 disabled={isLoading || isGoogleLoading}
               >
                 {isLoading ? (
