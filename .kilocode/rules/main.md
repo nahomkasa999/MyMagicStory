@@ -1,6 +1,6 @@
 # RULES MUST BE APPLIED
 
-# Before implementing, editing file or adding anycode ask for comformation to edit it, -> the  user will study your code and give you recommendation or approve your code
+# VERY VERY VERY VERY VERY IMPORTANT RULE TO APPLY Before implementing, editing file or adding anycode ask for comformation to edit it, -> the  user will study your code and give you recommendation or approve your code
 
 # never create a component that could be imported form shadcn
 

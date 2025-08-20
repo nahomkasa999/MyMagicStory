@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { UserAccountHeader } from "./user-account-header";
@@ -29,6 +30,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
+  const router = useRouter();
   return (
     <div className="space-y-3">
       {/* Dashboard Header */}
@@ -40,7 +42,11 @@ export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
           </p>
         </div>
         
-        <Button size="sm" className="sm:w-auto h-7 text-xs">
+        <Button
+          size="sm"
+          className="sm:w-auto h-7 text-xs"
+          onClick={() => router.push("/dashboard/choicetemplate")}
+        >
           <Plus className="h-3 w-3 mr-1" />
           Create New Storybook
         </Button>

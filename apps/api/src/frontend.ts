@@ -38,27 +38,6 @@ const frontendIncome = {
       "text": "When I grow up, I might become a doctor, helping people feel better every day.",
       "imagePrompt": "Pixar-style children's hospital checkup room with bright clean walls, friendly medical equipment, posters; colorful and cozy."
     },
-    {
-      "page": 5,
-      "spread": { "firstPage": 4, "lastPage": 5 },
-      "side": "right",
-      "text": null,
-      "imagePrompt": "Pixar-style young smiling doctor in white coat with stethoscope, cartoon style, soft 3D shading."
-    },
-    {
-      "page": 6,
-      "spread": { "firstPage": 6, "lastPage": 7 },
-      "side": "left",
-      "text": "Or I could be a firefighter, bravely putting out fires and keeping everyone safe.",
-      "imagePrompt": "Pixar-style fire station scene with bright red fire truck, hoses, helmets, lockers; vibrant and fun."
-    },
-    {
-      "page": 7,
-      "spread": { "firstPage": 6, "lastPage": 7 },
-      "side": "right",
-      "text": null,
-      "imagePrompt": "Pixar-style brave young firefighter in uniform holding a hose, cheerful and dynamic."
-    },
   ]
 }
 

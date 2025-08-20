@@ -17,6 +17,10 @@ import {
   createTemplateRoute,
   createTemplateHandler,
 } from "./routes/template.js";
+import {
+  getAllTemplatesRoute,
+  getAllTemplatesHandler,
+} from "./routes/user/choiceTemplate.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -42,6 +46,7 @@ app.onError((err, c) => {
 });
 
 app.use("/template", supabaseAuth)
+//app.use("/user/templates", supabaseAuth)
 
 //authentication
 app.openapi(CreateUserInDB, CreateUserInDBHandler )
@@ -50,6 +55,7 @@ app.openapi(getUsersRoute,  getUsersHandler)
 app.openapi(createPostRoute, createPostHandler);
 app.openapi(getSecureImageUrlRoute, getSecureImageUrlHandler);
 app.openapi(createTemplateRoute, createTemplateHandler);
+app.openapi(getAllTemplatesRoute, getAllTemplatesHandler);
 
 
 

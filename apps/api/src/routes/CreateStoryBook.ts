@@ -1,20 +1,38 @@
-import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute } from "@hono/zod-openapi";
 import type { Context } from "hono";
-import { GoogleGenAI, Modality } from "@google/genai";
-import * as fs from "node:fs"
+import { writeFile } from "fs/promises";
+import Replicate from "replicate";
+import * as fs from "node:fs";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import frontendIncome from "../frontend.js";
+import { z } from "zod";
+import { prisma } from "../db/index.js";
+import fetch from "node-fetch";
 
-function wrapText(
-  text: string,
-  maxWidth: number,
-  font: any,
-  fontSize: number
-): string[] {
+console.log(process.env.REPLICATE_API_TOKEN)
+const replicate = new Replicate({auth: process.env.REPLICATE_API_TOKEN});
+
+
+const textPageSchema = z.object({
+  type: z.literal("text"),
+  content: z.string(),
+  linkToPrevious: z.boolean(),
+});
+
+const imagePageSchema = z.object({
+  type: z.literal("image"),
+  content: z.string().optional(),
+  linkToPrevious: z.boolean(),
+});
+
+const layoutJsonSchema = z.object({
+  title: z.string(),
+  pages: z.array(z.union([textPageSchema, imagePageSchema])),
+});
+
+function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
   const words = text.split(" ");
   let lines: string[] = [];
   let currentLine = "";
-
   for (const word of words) {
     const testLine = currentLine ? `${currentLine} ${word}` : word;
     const lineWidth = font.widthOfTextAtSize(testLine, fontSize);
@@ -34,12 +52,10 @@ async function generateStorybookPDF(
   coverTitle: string,
   coverSubtitle?: string
 ) {
-
-  console.log("am in");
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  // --- Cover Page ---
+  // Cover page
   let cover = pdfDoc.addPage();
   cover.setFont(font);
   cover.setFontSize(40);
@@ -60,18 +76,16 @@ async function generateStorybookPDF(
     });
   }
 
-  // --- Story Pages ---
-  for (const p of frontendIncome.pages) {
+  // Content pages
+  for (const p of pages) {
     let page = pdfDoc.addPage();
     page.setFont(font);
 
     if (p.text) {
-      console.log(p);
       const fontSize = 18;
       page.setFontSize(fontSize);
       const margin = 50;
       const maxWidth = page.getWidth() - margin * 2;
-
       const lines = wrapText(p.text, maxWidth, font, fontSize);
 
       let totalHeight = lines.length * (fontSize + 4);
@@ -80,17 +94,11 @@ async function generateStorybookPDF(
       for (const line of lines) {
         const lineWidth = font.widthOfTextAtSize(line, fontSize);
         const x = (page.getWidth() - lineWidth) / 2;
-        page.drawText(line, {
-          x,
-          y,
-          size: fontSize,
-          font,
-          color: rgb(0, 0, 0),
-        });
+        page.drawText(line, { x, y, size: fontSize, font, color: rgb(0, 0, 0) });
         y -= fontSize + 4;
       }
-    } else if (!p.text && p.imagePrompt) {
-      const imgBytes = await fs.readFileSync(`page_${p.page}.png`);
+    } else if (p.imagePath) {
+      const imgBytes = fs.readFileSync(p.imagePath);
       const img = await pdfDoc.embedPng(imgBytes);
       page.drawImage(img, {
         x: 0,
@@ -104,19 +112,15 @@ async function generateStorybookPDF(
   return await pdfDoc.save();
 }
 
-// 1. Updated Schema for File Upload
 export const createPostRoute = createRoute({
   method: "post",
-  path: "/post-data",
+  path: "/post-data/:id",
   tags: ["Data"],
   request: {
     body: {
       content: {
         "image/*": {
-          schema: {
-            type: "string",
-            format: "binary",
-          },
+          schema: { type: "string", format: "binary" },
         },
       },
     },
@@ -127,67 +131,62 @@ export const createPostRoute = createRoute({
 });
 
 export const createPostHandler = async (c: Context) => {
-  console.log("started ...");
+  const id = c.req.param("id");
+  if (!id) return c.json({ error: "Template ID is required" }, 400);
 
-  const arrayBuffer = await c.req.arrayBuffer();
-  const contentType = c.req.header("Content-Type") || "application/octet-stream";
-  const file = new File([arrayBuffer], "upload", { type: contentType });
+  let layout;
+  try {
+    const storyTemplate = await prisma.storyTemplate.findUnique({
+      where: { id },
+      select: { layoutJson: true },
+    });
+    if (!storyTemplate) return c.json({ error: "Template not found" }, 404);
 
-  const buffer = Buffer.from(arrayBuffer);
-  fs.writeFileSync("photo.png",buffer )
+    layout = layoutJsonSchema.parse(storyTemplate.layoutJson);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ error: "Invalid template layout format", details: error }, 500);
+    }
+    return c.json({ error: "Failed to retrieve or parse story template" }, 500);
+  }
 
-  const imagePath = "photo.png";
-  const imageData = fs.readFileSync(imagePath);
-  const base64Image = imageData.toString("base64");
+  // Save uploaded image locally
+  // const arrayBuffer = await c.req.arrayBuffer();
+  // const buffer = Buffer.from(arrayBuffer);
+  // fs.writeFileSync("photo.png", buffer);
 
-  const ai = new GoogleGenAI({
-    apiKey: "AIzaSyBvlp9O1dQjMHRWjdmc8_c9uXTy9CZUP5Y",
-  });
+  let allPagesForPdf: { text: string | null; imagePath?: string }[] = [];
+  let pageIndex = 0;
 
-  let generatedPages: { text: string | null; imagePath?: string }[] = [];
-
-
-  for (const page of frontendIncome.pages) {
-    if (!!page.text) {
-      continue;
+  for (const page of layout.pages) {
+    if (page.type === "text") {
+      allPagesForPdf.push({ text: page.content, imagePath: undefined });
     }
 
-    const contents = [
-      {
-        text: page.imagePrompt!,
-        role: "you are a professional kids storybook maker. the storybook you generate should be colorfull cartoonic and cartoonic background e.g a cartoonic room of a doctor where the cartoonic boy start in front with doctor cloth. the proporition of the things should be keept to be real mean the boy should be too big or small compared to the room but correct size",
-      },  
-      {
-        inlineData: {
-          mimeType: "image/png",
-          data: base64Image,
-        },
-      },
-    ];
+    if (page.type === "image" && page.content) {
+      const input = {
+        prompt: page.content,
+        input_image: "https://res.cloudinary.com/dzimvdwb2/image/upload/v1755596505/1._ec063a.jpg", // could upload to cloud if needed
+        output_format: "png",
+        aspect_ratio: "3:4",
+      };
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-preview-image-generation",
-      contents: contents,
-      config: { responseModalities: [ Modality.TEXT, Modality.IMAGE ] },
-    });
+      const output = await replicate.run("black-forest-labs/flux-kontext-pro", { input });
+      // Replicate returns a URL string or array of URLs
+      const imageUrl = Array.isArray(output) ? output[0] : output;
+      const res = await fetch(imageUrl);
+      const imgBuffer = Buffer.from(await res.arrayBuffer());
+      const filename = `photo_gen_${pageIndex}.png`;
+      await writeFile(filename, imgBuffer);
 
-    for (const part of response.candidates![0].content!.parts!) {
-      if (part.inlineData) {
-        const buffer = Buffer.from(part!.inlineData!.data!, "base64");
-        const filePath = `page_${page.page}.png`;
-        fs.writeFileSync(filePath, buffer);
-        generatedPages.push({ text: page.text!, imagePath: filePath });
-      }
+      allPagesForPdf.push({ text: null, imagePath: filename });
+      pageIndex++;
     }
   }
-  console.log("finished....")
-  const pdfBytes = await generateStorybookPDF(
-    generatedPages,
-    "My AI Storybook",
-    "" 
-  )
+
+  const pdfBytes = await generateStorybookPDF(allPagesForPdf, layout.title, "");
   return c.body(pdfBytes, 200, {
     "Content-Type": "application/pdf",
-    "Content-Disposition": "attachment; filename=storybook.pdf",
+    "Content-Disposition": "inline; filename=storybook.pdf",
   });
 };
