@@ -176,7 +176,7 @@ export default function SigninPage() {
                 <Button
                   variant="link"
                   className="p-0 h-auto text-xs font-medium text-primary hover:underline"
-                  onClick={() => console.log('Forgot password clicked')}
+                  onClick={() => router.push('/forgot-password')}
                 >
                   Forgot password?
                 </Button>

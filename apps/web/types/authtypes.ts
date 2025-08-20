@@ -16,7 +16,7 @@ export const userResponseSchema = z.object(
     name: z.string().nullable(),
     email: z.email(),
     role: z.enum(["ADMIN", "USER"]),
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
     })
 });

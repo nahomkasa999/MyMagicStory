@@ -7,22 +7,10 @@ import { Input } from "@/components/ui/input";
 import { UserAccountHeader } from "./user-account-header";
 import { StorybooksGrid } from "./storybooks-grid";
 
-interface User {
-  name: string;
-  email: string;
-  avatar?: string;
-  plan: "free" | "paid";
-}
+import type { FrontendUser, FrontendStorybook } from "../../../../../types/dashboard-types";
 
-interface Storybook {
-  id: string;
-  title: string;
-  description: string;
-  coverImage?: string;
-  createdAt: string;
-  status: "completed" | "draft" | "processing";
-  pageCount: number;
-}
+type User = FrontendUser;
+type Storybook = FrontendStorybook;
 
 interface DashboardLayoutProps {
   user: User;
@@ -31,6 +19,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
   const router = useRouter();
+  
   return (
     <div className="space-y-3">
       {/* Dashboard Header */}
@@ -53,7 +42,26 @@ export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
       </div>
       
       {/* Storybooks Grid */}
-      <StorybooksGrid storybooks={storybooks} />
+      {storybooks.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="rounded-full bg-muted p-3 mb-4">
+            <Plus className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No storybooks yet</h3>
+          <p className="text-muted-foreground mb-4 max-w-sm">
+            Start creating your magical storybooks by choosing a template and adding your own content.
+          </p>
+          <Button
+            onClick={() => router.push("/dashboard/choicetemplate")}
+            className="h-9"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Your First Storybook
+          </Button>
+        </div>
+      ) : (
+        <StorybooksGrid storybooks={storybooks} />
+      )}
     </div>
   );
 }

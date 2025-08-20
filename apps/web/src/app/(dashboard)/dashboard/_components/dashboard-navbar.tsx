@@ -1,10 +1,12 @@
 "use client";
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User, LogOut, Settings } from "lucide-react";
+import { LogoutConfirmation } from './logoutComformation';
 
 interface DashboardNavbarProps {
   user: {
@@ -16,6 +18,8 @@ interface DashboardNavbarProps {
 }
 
 export function DashboardNavbar({ user }: DashboardNavbarProps) {
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  
   const planColors = {
     free: "bg-gray-100 text-gray-800 hover:bg-gray-200",
     paid: "bg-green-100 text-green-800 hover:bg-green-200"
@@ -32,7 +36,7 @@ export function DashboardNavbar({ user }: DashboardNavbarProps) {
         <Link href="/" className="text-primary text-xl font-serif font-bold">
           MyMagicalStory
         </Link>
-        
+          
         <div className="flex space-x-6 font-sans text-neutral-700 text-sm">
           <Link href="/dashboard" className="hover:text-primary">Dashboard</Link>
           <Link href="/create" className="hover:text-primary">Create Story</Link>
@@ -60,15 +64,23 @@ export function DashboardNavbar({ user }: DashboardNavbarProps) {
           </div>
           
           <div className="flex space-x-1">
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
+            <Link href="/dashboard/account">
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={() => setShowLogoutDialog(true)}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <LogoutConfirmation
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+      />
     </nav>
   );
 }
