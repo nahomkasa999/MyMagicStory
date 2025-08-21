@@ -6,12 +6,11 @@ import * as fs from "node:fs";
 import { z } from "zod";
 import { prisma } from "../db/index.js";
 import fetch from "node-fetch";
+import pMap from "p-map";
 import { EnhancedPDFGenerator, PreviewGenerator, layoutJsonSchema } from "../services/pdf/index.js";
 import type { PageRenderData } from "../services/pdf/index.js";
 
-console.log(process.env.REPLICATE_API_TOKEN)
-const replicate = new Replicate({auth: process.env.REPLICATE_API_TOKEN});
-
+const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 
 // Legacy schema for backward compatibility
 const legacyTextPageSchema = z.object({
@@ -19,13 +18,11 @@ const legacyTextPageSchema = z.object({
   content: z.string(),
   linkToPrevious: z.boolean(),
 });
-
 const legacyImagePageSchema = z.object({
   type: z.literal("image"),
   content: z.string().optional(),
   linkToPrevious: z.boolean(),
 });
-
 const legacyLayoutJsonSchema = z.object({
   title: z.string(),
   pages: z.array(z.union([legacyTextPageSchema, legacyImagePageSchema])),
@@ -44,28 +41,31 @@ export const createPostRoute = createRoute({
       },
     },
   },
-  responses: {
-    200: { description: "PDF generated" },
-  },
+  responses: { 200: { description: "PDF generated" } },
 });
 
 export const createPostHandler = async (c: Context) => {
   const id = c.req.param("id");
   if (!id) return c.json({ error: "Template ID is required" }, 400);
-
-  // Get authenticated user
   const user = c.get("user");
   if (!user) return c.json({ error: "User not authenticated" }, 401);
 
   try {
-    // Fetch template from database
+    // fetch user subscription
+    const subscription = await prisma.subscription.findFirst({
+      where: {
+        userId: user.id,
+        status: "ACTIVE",
+        currentPeriodEnd: { gt: new Date() }, // still valid
+      },
+    });
+
     const storyTemplate = await prisma.storyTemplate.findUnique({
       where: { id },
       select: { layoutJson: true, title: true },
     });
     if (!storyTemplate) return c.json({ error: "Template not found" }, 404);
 
-    // Create project record
     const project = await prisma.project.create({
       data: {
         userId: user.id,
@@ -75,65 +75,63 @@ export const createPostHandler = async (c: Context) => {
       },
     });
 
-    // Parse layout - try enhanced schema first, fallback to legacy
     let layout;
     try {
       layout = layoutJsonSchema.parse(storyTemplate.layoutJson);
     } catch {
-      // Fallback to legacy schema and convert
       const legacyLayout = legacyLayoutJsonSchema.parse(storyTemplate.layoutJson);
       layout = {
         title: legacyLayout.title,
         subtitle: undefined,
-        pages: legacyLayout.pages.map(page => {
-          if (page.type === "text") {
-            return {
-              type: "text" as const,
-              content: page.content,
-              linkToPrevious: page.linkToPrevious,
-              style: {
-                fontSize: 18,
-                fontFamily: "Helvetica",
-                color: "#000000",
-                alignment: "center" as const,
-                margin: { top: 50, bottom: 50, left: 50, right: 50 }
+        pages: legacyLayout.pages.map((page) =>
+          page.type === "text"
+            ? {
+                type: "text" as const,
+                content: page.content,
+                linkToPrevious: page.linkToPrevious,
+                style: {
+                  fontSize: 18,
+                  fontFamily: "Helvetica",
+                  color: "#000000",
+                  alignment: "center" as const,
+                  margin: { top: 50, bottom: 50, left: 50, right: 50 },
+                },
               }
-            };
-          } else {
-            return {
-              type: "image" as const,
-              content: page.content,
-              linkToPrevious: page.linkToPrevious,
-              style: {
-                fit: "cover" as const,
-                position: { x: 0, y: 0 },
-                size: {}
+            : {
+                type: "image" as const,
+                content: page.content,
+                linkToPrevious: page.linkToPrevious,
+                style: {
+                  fit: "cover" as const,
+                  position: { x: 0, y: 0 },
+                  size: {},
+                },
               }
-            };
-          }
-        }),
+        ),
         settings: {
           pageSize: { width: 595.28, height: 841.89 },
           bleed: 9,
           colorProfile: "CMYK" as const,
-          resolution: 300
-        }
+          resolution: 300,
+        },
       };
     }
 
-    // Process pages and generate images
+    // limit pages if user has no subscription
+    let pagesToRender = layout.pages;
+    const isSubscribed = !!subscription;
+    if (!isSubscribed) {
+      pagesToRender = pagesToRender.slice(0, 3);
+    }
+
     const allPagesForPdf: PageRenderData[] = [];
-    let pageIndex = 0;
+    const imagePages = pagesToRender
+      .map((page, idx) => ({ page, idx }))
+      .filter((p) => p.page.type === "image" && p.page.content);
 
-    for (const page of layout.pages) {
-      if (page.type === "text") {
-        allPagesForPdf.push({
-          text: page.content,
-          style: page.style
-        });
-      }
-
-      if (page.type === "image" && page.content) {
+    const imageResults = await pMap(
+      imagePages,
+      async ({ page, idx }) => {
         try {
           const input = {
             prompt: page.content,
@@ -146,44 +144,46 @@ export const createPostHandler = async (c: Context) => {
           const imageUrl = Array.isArray(output) ? output[0] : output;
           const res = await fetch(imageUrl);
           const imgBuffer = Buffer.from(await res.arrayBuffer());
-          const filename = `photo_gen_${pageIndex}.png`;
+          const filename = `photo_gen_${idx}.png`;
           await writeFile(filename, imgBuffer);
 
-          allPagesForPdf.push({
-            imagePath: filename,
-            style: page.style
-          });
-          pageIndex++;
+          return { imagePath: filename, style: page.style, idx };
         } catch (error) {
-          console.error(`Failed to generate image for page ${pageIndex}:`, error);
-          // Add placeholder page
-          allPagesForPdf.push({
+          console.error(`Failed to generate image for page ${idx}:`, error);
+          return {
             text: "Image generation failed",
             style: {
               fontSize: 18,
               fontFamily: "Helvetica",
               color: "#666666",
               alignment: "center" as const,
-              margin: { top: 50, bottom: 50, left: 50, right: 50 }
-            }
-          });
+              margin: { top: 50, bottom: 50, left: 50, right: 50 },
+            },
+            idx,
+          };
         }
+      },
+      { concurrency: 5 }
+    );
+
+    let imageCounter = 0;
+    for (const page of pagesToRender) {
+      if (page.type === "text") {
+        allPagesForPdf.push({ text: page.content, style: page.style });
+      } else if (page.type === "image") {
+        allPagesForPdf.push(imageResults[imageCounter]);
+        imageCounter++;
       }
     }
 
-    // Initialize enhanced PDF generator
     const pdfGenerator = new EnhancedPDFGenerator();
-    const previewGenerator = new PreviewGenerator();
+    const result = await pdfGenerator.generatePDF(
+      { ...layout, pages: pagesToRender },
+      allPagesForPdf,
+      { outputFormat: "print", generatePreviews: false, uploadToStorage: false }
+    );
 
-    // Generate PDF with options
-    const result = await pdfGenerator.generatePDF(layout, allPagesForPdf, {
-      outputFormat: "print", // High-quality CMYK for print
-      generatePreviews: false, // Skip previews for direct PDF response
-      uploadToStorage: false,
-    });
-
-    // Clean up temporary image files
-    for (let i = 0; i < pageIndex; i++) {
+    for (let i = 0; i < imageCounter; i++) {
       try {
         fs.unlinkSync(`photo_gen_${i}.png`);
       } catch (error) {
@@ -191,7 +191,6 @@ export const createPostHandler = async (c: Context) => {
       }
     }
 
-    // Update project with PDF metadata and mark as completed
     await prisma.project.update({
       where: { id: project.id },
       data: {
@@ -202,34 +201,26 @@ export const createPostHandler = async (c: Context) => {
             fileSize: result.metadata.fileSize,
             dimensions: result.metadata.dimensions,
             generatedAt: new Date().toISOString(),
+            isPreview: !isSubscribed, // mark if only preview
           },
         },
         updatedAt: new Date(),
       },
     });
 
-    // Return PDF with project ID in headers
     return c.body(result.pdfBuffer, 200, {
       "Content-Type": "application/pdf",
       "Content-Disposition": "inline; filename=storybook.pdf",
       "X-Page-Count": result.metadata.pageCount.toString(),
       "X-File-Size": result.metadata.fileSize.toString(),
       "X-Project-Id": project.id,
+      "X-Preview": (!isSubscribed).toString(),
     });
-
   } catch (error) {
     console.error("Storybook generation failed:", error);
-    
     if (error instanceof z.ZodError) {
-      return c.json({
-        error: "Invalid template layout format",
-        details: error.issues
-      }, 400);
+      return c.json({ error: "Invalid template layout format", details: error.issues }, 400);
     }
-
-    return c.json({
-      error: "Failed to generate storybook",
-      message: error instanceof Error ? error.message : "Unknown error"
-    }, 500);
+    return c.json({ error: "Failed to generate storybook", message: error instanceof Error ? error.message : "Unknown error" }, 500);
   }
 };
