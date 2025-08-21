@@ -7,18 +7,28 @@ import { Button } from '@/components/ui/button'
 
 function Page() {
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+
+  const handleUploadSuccess = (result: { blob: Blob }) => {
+    const url = URL.createObjectURL(result.blob);
+    setPdfBlobUrl(url);
+  };
 
   return (
     <div>
-      <ImageUploadForm onProjectCreated={setProjectId} />
+      <ImageUploadForm 
+        onProjectCreated={setProjectId} 
+        onSuccess={handleUploadSuccess} 
+      />
+
       <div className='w-full'>
-        {/* here this button will intiate a stripe payment fo the book*/}
         <Button className='m-auto'>Pay to get</Button>
       </div>
+
       <div className="mt-8">
         <PDFViewer
           projectId={projectId || undefined}
-          pdfPath={!projectId ? "/storybook.pdf" : undefined}
+          pdfPath={pdfBlobUrl || (!projectId ? "/storybook.pdf" : undefined)}
           className="max-w-4xl mx-auto"
         />
       </div>
@@ -26,4 +36,4 @@ function Page() {
   )
 }
 
-export default Page
+export default Page;

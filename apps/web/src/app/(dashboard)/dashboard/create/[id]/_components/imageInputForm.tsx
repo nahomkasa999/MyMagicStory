@@ -5,19 +5,21 @@ import { useForm } from "react-hook-form";
 import { useParams } from "next/navigation";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormField } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { CustomFileInput } from "./file-input"; 
 import { formSchema } from "@mymagicstory/shared/types";
 import { Loader2 } from "lucide-react";
 import { useCreateStoryBook } from "../_hooks/creatingStoryBook"; 
+import { compressImage } from "@/lib/compresor"; 
 
 type FormData = z.infer<typeof formSchema>;
 
 interface ImageUploadFormProps {
   onProjectCreated?: (projectId: string) => void;
+  onSuccess?: (result: { blob: Blob }) => void;
 }
 
-export default function ImageUploadForm({ onProjectCreated }: ImageUploadFormProps) {
+export default function ImageUploadForm({ onProjectCreated, onSuccess }: ImageUploadFormProps) {
   const params = useParams();
   const id = params.id as string;
   
@@ -30,17 +32,19 @@ export default function ImageUploadForm({ onProjectCreated }: ImageUploadFormPro
 
   const { mutate, isPending, isSuccess } = useCreateStoryBook();
 
-  function onSubmit(data: FormData) {
-    mutate({ data, id }, {
+  async function onSubmit(data: FormData) {
+    if (!data.singleImage) return;
+
+    const compressedImage = await compressImage(data.singleImage);
+
+    mutate({ data: { singleImage: compressedImage }, id }, {
       onSuccess: (result) => {
-        const url = URL.createObjectURL(result.blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "storybook.pdf";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      },
+        // Generate blob URL and send it back to parent
+        if (result?.blob) {
+          const url = URL.createObjectURL(result.blob);
+          if (onSuccess) onSuccess({ blob: result.blob });
+        }
+      }
     });
   }
 
