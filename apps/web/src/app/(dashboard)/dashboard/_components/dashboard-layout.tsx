@@ -2,12 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Plus, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { UserAccountHeader } from "./user-account-header";
-import { StorybooksGrid } from "./storybooks-grid";
+import { Plus } from "lucide-react";
+import { StorybooksGridWithPreviews } from "./storybooks-grid-with-previews";
 
 import type { FrontendUser, FrontendStorybook } from "../../../../../types/dashboard-types";
+import type { StorybookWithPreviews } from "../../../../../types/preview-types";
 
 type User = FrontendUser;
 type Storybook = FrontendStorybook;
@@ -17,8 +16,29 @@ interface DashboardLayoutProps {
   storybooks: Storybook[];
 }
 
+// Transform FrontendStorybook to StorybookWithPreviews
+function transformToStorybookWithPreviews(storybooks: Storybook[]): StorybookWithPreviews[] {
+  return storybooks.map(storybook => ({
+    ...storybook,
+    hasWebPPreviews: false, // Will be determined by the preview hooks
+    previews: undefined,
+  }));
+}
+
 export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
   const router = useRouter();
+  
+  const storybooksWithPreviews = transformToStorybookWithPreviews(storybooks);
+
+  const handleViewStorybook = (storybook: StorybookWithPreviews) => {
+    // Navigate to storybook view page (to be implemented)
+    console.log("View storybook:", storybook.id);
+  };
+
+  const handleEditStorybook = (storybook: StorybookWithPreviews) => {
+    // Navigate to storybook edit page (to be implemented)
+    console.log("Edit storybook:", storybook.id);
+  };
   
   return (
     <div className="space-y-3">
@@ -27,7 +47,7 @@ export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
         <div>
           <h1 className="text-lg font-bold tracking-tight">My Storybooks</h1>
           <p className="text-xs text-muted-foreground">
-            Manage and view your magical storybook collection
+            Manage and view your magical storybook collection with WebP previews
           </p>
         </div>
         
@@ -42,7 +62,7 @@ export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
       </div>
       
       {/* Storybooks Grid */}
-      {storybooks.length === 0 ? (
+      {storybooksWithPreviews.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="rounded-full bg-muted p-3 mb-4">
             <Plus className="h-6 w-6 text-muted-foreground" />
@@ -60,7 +80,11 @@ export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
           </Button>
         </div>
       ) : (
-        <StorybooksGrid storybooks={storybooks} />
+        <StorybooksGridWithPreviews
+          storybooks={storybooksWithPreviews}
+          onViewStorybook={handleViewStorybook}
+          onEditStorybook={handleEditStorybook}
+        />
       )}
     </div>
   );

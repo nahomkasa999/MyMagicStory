@@ -13,7 +13,11 @@ import { useCreateStoryBook } from "../_hooks/creatingStoryBook";
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function ImageUploadForm() {
+interface ImageUploadFormProps {
+  onProjectCreated?: (projectId: string) => void;
+}
+
+export default function ImageUploadForm({ onProjectCreated }: ImageUploadFormProps) {
   const params = useParams();
   const id = params.id as string;
   
@@ -28,8 +32,8 @@ export default function ImageUploadForm() {
 
   function onSubmit(data: FormData) {
     mutate({ data, id }, {
-      onSuccess: (blob) => {
-        const url = URL.createObjectURL(blob);
+      onSuccess: (result) => {
+        const url = URL.createObjectURL(result.blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = "storybook.pdf";
