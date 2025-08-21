@@ -1,5 +1,5 @@
+import { Hono } from "hono";
 import { createRoute } from "@hono/zod-openapi";
-import type { Context } from "hono";
 import { z } from "zod";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -9,7 +9,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const getSecureImageUrlRoute = createRoute({
+const app = new Hono();
+
+const getSecureImageUrlRoute = createRoute({
   method: "get",
   path: "/secure-image-url",
   tags: ["Image"],
@@ -32,10 +34,9 @@ export const getSecureImageUrlRoute = createRoute({
   },
 });
 
-export const getSecureImageUrlHandler = async (c: Context) => {
+const getSecureImageUrlHandler = async (c: any) => {
   const { public_id } = c.req.valid("query");
-
-  const expirationTime = Math.round(Date.now() / 1000) + 3600; // 1 hour from now
+  const expirationTime = Math.round(Date.now() / 1000) + 3600;
 
   const secureUrl = cloudinary.url(public_id, {
     sign_url: true,
@@ -45,3 +46,9 @@ export const getSecureImageUrlHandler = async (c: Context) => {
 
   return c.json({ secureUrl }, 200);
 };
+
+// Attach handler to Hono route
+app.get("/secure-image-url", getSecureImageUrlHandler);
+
+export { getSecureImageUrlRoute, getSecureImageUrlHandler };
+export default app;

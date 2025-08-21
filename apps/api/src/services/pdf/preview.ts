@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import { createCanvas, loadImage, CanvasRenderingContext2D as NodeCanvasRenderingContext2D, Image } from "canvas";
 import { supabase } from "../../supabase/client.js";
+import * as pdfjsLib from "../../../tools/pdfjs-dist/legacy/build/pdf.mjs";
 
 export class PreviewGenerator {
   /**
@@ -209,34 +210,85 @@ export class PreviewGenerator {
   }
 
   /**
-   * Convert PDF buffer to image buffers (placeholder implementation)
+   * Convert PDF buffer to image buffers using PDF.js
    */
   private async convertPDFToImages(pdfBuffer: Buffer): Promise<Buffer[]> {
-    // TODO: Implement actual PDF to image conversion
-    // This would require pdf2pic, pdf-poppler, or similar library
-    
-    // For now, return placeholder images
-    const placeholderCount = 3; // Assume 3 pages
-    const placeholders: Buffer[] = [];
-
-    for (let i = 0; i < placeholderCount; i++) {
+    try {
+      // Load PDF document
+      const pdf = await pdfjsLib.getDocument({
+        data: new Uint8Array(pdfBuffer),
+        useSystemFonts: true
+      }).promise;
+      
+      const images: Buffer[] = [];
+      
+      // Process each page
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        try {
+          const page = await pdf.getPage(pageNum);
+          
+          // Set scale for high-quality rendering (2.0 = 144 DPI)
+          const scale = 2.0;
+          const viewport = page.getViewport({ scale });
+          
+          // Create canvas for rendering
+          const canvas = createCanvas(viewport.width, viewport.height);
+          const ctx = canvas.getContext('2d');
+          
+          // Render page to canvas
+          const renderContext = {
+            canvasContext: ctx as any,
+            viewport: viewport,
+            canvas: canvas as any,
+          };
+          
+          await page.render(renderContext).promise;
+          
+          // Convert canvas to PNG buffer
+          const imageBuffer = canvas.toBuffer('image/png');
+          images.push(imageBuffer);
+          
+        } catch (pageError) {
+          console.error(`Failed to render page ${pageNum}:`, pageError);
+          
+          // Create error placeholder for this page
+          const canvas = createCanvas(800, 1000);
+          const ctx = canvas.getContext('2d');
+          
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, 800, 1000);
+          
+          ctx.fillStyle = '#ff0000';
+          ctx.font = '24px Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`Error loading page ${pageNum}`, 400, 500);
+          
+          const errorBuffer = canvas.toBuffer('image/png');
+          images.push(errorBuffer);
+        }
+      }
+      
+      return images;
+      
+    } catch (error) {
+      console.error("PDF to image conversion failed:", error);
+      
+      // Return single error placeholder
       const canvas = createCanvas(800, 1000);
       const ctx = canvas.getContext('2d');
       
-      // Create placeholder page
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, 800, 1000);
       
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = '#ff0000';
       ctx.font = '24px Arial, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`Page ${i + 1}`, 400, 500);
+      ctx.fillText('PDF conversion failed', 400, 450);
+      ctx.fillText('Please try again', 400, 500);
       
-      const buffer = canvas.toBuffer('image/png');
-      placeholders.push(buffer);
+      const errorBuffer = canvas.toBuffer('image/png');
+      return [errorBuffer];
     }
-
-    return placeholders;
   }
 
   /**

@@ -53,13 +53,27 @@ export const createPostHandler = async (c: Context) => {
   const id = c.req.param("id");
   if (!id) return c.json({ error: "Template ID is required" }, 400);
 
+  // Get authenticated user
+  const user = c.get("user");
+  if (!user) return c.json({ error: "User not authenticated" }, 401);
+
   try {
     // Fetch template from database
     const storyTemplate = await prisma.storyTemplate.findUnique({
       where: { id },
-      select: { layoutJson: true },
+      select: { layoutJson: true, title: true },
     });
     if (!storyTemplate) return c.json({ error: "Template not found" }, 404);
+
+    // Create project record
+    const project = await prisma.project.create({
+      data: {
+        userId: user.id,
+        templateId: id,
+        title: `${storyTemplate.title} - ${new Date().toLocaleDateString()}`,
+        status: "DRAFT",
+      },
+    });
 
     // Parse layout - try enhanced schema first, fallback to legacy
     let layout;
@@ -177,12 +191,30 @@ export const createPostHandler = async (c: Context) => {
       }
     }
 
-    // Return PDF
+    // Update project with PDF metadata and mark as completed
+    await prisma.project.update({
+      where: { id: project.id },
+      data: {
+        status: "COMPLETED",
+        generatedPages: {
+          pdfMetadata: {
+            pageCount: result.metadata.pageCount,
+            fileSize: result.metadata.fileSize,
+            dimensions: result.metadata.dimensions,
+            generatedAt: new Date().toISOString(),
+          },
+        },
+        updatedAt: new Date(),
+      },
+    });
+
+    // Return PDF with project ID in headers
     return c.body(result.pdfBuffer, 200, {
       "Content-Type": "application/pdf",
       "Content-Disposition": "inline; filename=storybook.pdf",
       "X-Page-Count": result.metadata.pageCount.toString(),
       "X-File-Size": result.metadata.fileSize.toString(),
+      "X-Project-Id": project.id,
     });
 
   } catch (error) {

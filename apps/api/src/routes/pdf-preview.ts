@@ -31,6 +31,11 @@ const previewResponseSchema = z.object({
   }),
 });
 
+const previewErrorSchema = z.object({
+  error: z.string(),
+  details: z.any().optional(),
+});
+
 export const previewRoute = createRoute({
   method: "post",
   path: "/generate-previews",
@@ -48,42 +53,10 @@ export const previewRoute = createRoute({
   },
   responses: {
     200: {
-      description: "Previews generated successfully",
+      description: "Success response",
       content: {
         "application/json": {
-          schema: previewResponseSchema,
-        },
-      },
-    },
-    400: {
-      description: "Invalid request",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-            details: z.any().optional(),
-          }),
-        },
-      },
-    },
-    404: {
-      description: "Storybook not found",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    500: {
-      description: "Server error",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-            message: z.string().optional(),
-          }),
+          schema: z.union([previewResponseSchema, previewErrorSchema]),
         },
       },
     },
@@ -106,7 +79,7 @@ export const previewHandler = async (c: Context) => {
     });
 
     if (!project) {
-      return c.json({ error: "Project not found" }, 404);
+      return c.json({ error: "Project not found" }, 200);
     }
 
     // Parse layout
@@ -178,7 +151,7 @@ export const previewHandler = async (c: Context) => {
         pageCount: pages.length,
         generatedAt: new Date().toISOString(),
       },
-    });
+    }, 200);
 
   } catch (error) {
     console.error("Preview generation failed:", error);
@@ -187,13 +160,13 @@ export const previewHandler = async (c: Context) => {
       return c.json({
         error: "Invalid request format",
         details: error.issues,
-      }, 400);
+      }, 200);
     }
 
     return c.json({
       error: "Failed to generate previews",
       message: error instanceof Error ? error.message : "Unknown error",
-    }, 500);
+    }, 200);
   }
 };
 
@@ -223,25 +196,25 @@ export const getPreviewsRoute = createRoute({
   },
   responses: {
     200: {
-      description: "Previews retrieved successfully",
+      description: "Success response",
       content: {
         "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            previews: z.object({
-              clear: z.array(z.string().url()),
-              blurred: z.array(z.string().url()).optional(),
+          schema: z.union([
+            z.object({
+              success: z.boolean(),
+              previews: z.object({
+                clear: z.array(z.string().url()),
+                blurred: z.array(z.string().url()).optional(),
+              }),
+              metadata: z.object({
+                pageCount: z.number(),
+                lastGenerated: z.string().datetime().optional(),
+              }),
             }),
-            metadata: z.object({
-              pageCount: z.number(),
-              lastGenerated: z.string().datetime().optional(),
-            }),
-          }),
+            previewErrorSchema
+          ]),
         },
       },
-    },
-    404: {
-      description: "Storybook or previews not found",
     },
   },
 });
@@ -259,7 +232,7 @@ export const getPreviewsHandler = async (c: Context) => {
     });
 
     if (!project || !project.generatedPages) {
-      return c.json({ error: "Previews not found" }, 404);
+      return c.json({ error: "Previews not found" }, 200);
     }
 
     const generatedData = project.generatedPages as any;
@@ -267,7 +240,7 @@ export const getPreviewsHandler = async (c: Context) => {
     const blurredUrls = generatedData.blurredPreviewUrls;
 
     if (!previewUrls) {
-      return c.json({ error: "Previews not found" }, 404);
+      return c.json({ error: "Previews not found" }, 200);
     }
 
     return c.json({
@@ -280,13 +253,13 @@ export const getPreviewsHandler = async (c: Context) => {
         pageCount: previewUrls.length,
         lastGenerated: generatedData.generatedAt || project.updatedAt.toISOString(),
       },
-    });
+    }, 200);
 
   } catch (error) {
     console.error("Failed to get previews:", error);
     return c.json({
       error: "Failed to retrieve previews",
       message: error instanceof Error ? error.message : "Unknown error",
-    }, 500);
+    }, 200);
   }
 };

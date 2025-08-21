@@ -357,10 +357,22 @@ export class EnhancedPDFGenerator {
    * Generate WebP previews from PDF for web display
    */
   private async generateWebPPreviews(pdfBuffer: Buffer): Promise<string[]> {
-    // TODO: Implement PDF to WebP conversion
-    // This would require pdf2pic or similar library
-    // For now, return empty array
-    return [];
+    try {
+      // Use PreviewGenerator to create WebP previews
+      const { PreviewGenerator } = await import("./preview.js");
+      const previewGenerator = new PreviewGenerator();
+      
+      const result = await previewGenerator.generateWebPPreviews(pdfBuffer, {
+        quality: 80,
+        width: 800,
+        generateBlurred: false, // Only clear previews for this method
+      });
+      
+      return result.clear;
+    } catch (error) {
+      console.error("Failed to generate WebP previews:", error);
+      return [];
+    }
   }
 
   /**
