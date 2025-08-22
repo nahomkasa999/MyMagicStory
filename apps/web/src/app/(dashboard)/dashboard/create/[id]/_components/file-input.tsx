@@ -13,7 +13,7 @@ interface CustomFileInputProps {
   multiple?: boolean;
 }
 
-export function CustomFileInput({ form, name, label, description, multiple = false }: CustomFileInputProps) {
+export function CustomFileInput({ form, name, label, description, multiple }: CustomFileInputProps) {
   const [previews, setPreviews] = useState<string[]>([]);
   const fieldState = form.watch(name);
 
@@ -23,12 +23,9 @@ export function CustomFileInput({ form, name, label, description, multiple = fal
       return;
     }
 
-    let files: File[] = [];
-    if (multiple) {
-      files = Array.from(fieldState as FileList);
-    } else {
-      files = [fieldState as File];
-    }
+    const files: File[] = multiple 
+      ? Array.from(fieldState as FileList) 
+      : [fieldState as File];
 
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setPreviews(newPreviews);
@@ -50,13 +47,13 @@ export function CustomFileInput({ form, name, label, description, multiple = fal
               {...fieldProps}
               onChange={(event) => {
                 const files = event.target.files;
-                onChange(multiple ? files : files?.[0]);
+                if (!files) return;
+                onChange(multiple ? files : files[0]);
               }}
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
-
 
           {previews.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">

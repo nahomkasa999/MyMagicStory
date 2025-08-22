@@ -35,14 +35,23 @@ export const createPostRoute = createRoute({
   request: {
     body: {
       content: {
-        "image/*": {
-          schema: { type: "string", format: "binary" },
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              imageUrls: {
+                type: "array",
+                items: { type: "string", format: "uri" },
+              },
+            },
+            required: ["imageUrls"],
+          },
         },
       },
     },
   },
   responses: { 200: { description: "PDF generated" } },
-});
+})
 
 export const createPostHandler = async (c: Context) => {
   const id = c.req.param("id");
@@ -51,7 +60,10 @@ export const createPostHandler = async (c: Context) => {
   if (!user) return c.json({ error: "User not authenticated" }, 401);
 
   try {
-    // fetch user subscription
+    const { imageUrls }: { imageUrls: string[] } = await c.req.json();
+if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided" }, 400);
+
+
     const subscription = await prisma.subscription.findFirst({
       where: {
         userId: user.id,
@@ -59,6 +71,7 @@ export const createPostHandler = async (c: Context) => {
         currentPeriodEnd: { gt: new Date() },
       },
     });
+
     const storyTemplate = await prisma.storyTemplate.findUnique({
       where: { id },
       select: { layoutJson: true, title: true },
@@ -116,12 +129,9 @@ export const createPostHandler = async (c: Context) => {
       };
     }
 
-     //limit pages if user has no subscription
     let pagesToRender = layout.pages;
     const isSubscribed = !!subscription;
-    if (!isSubscribed) {
-      pagesToRender = pagesToRender.slice(0, 3);
-    }
+    if (!isSubscribed) pagesToRender = pagesToRender.slice(0, 3);
 
     const allPagesForPdf: PageRenderData[] = [];
     const imagePages = pagesToRender
@@ -130,17 +140,17 @@ export const createPostHandler = async (c: Context) => {
 
     const imageResults = await pMap(
       imagePages,
-      async ({ page, idx }) => {
+      async ({ page, idx }, i) => {
         try {
           const input = {
             prompt: page.content,
-            input_image: "https://res.cloudinary.com/dzimvdwb2/image/upload/v1755596505/1._ec063a.jpg",
+            style_reference_images: imageUrls, 
             output_format: "png",
             aspect_ratio: "3:4",
           };
-
-          //const output = await replicate.run("black-forest-labs/flux-kontext-pro", { input });
-          const output = "hhdf"
+          console.log(input)
+         
+          const output = await replicate.run("ideogram-ai/ideogram-v3-turbo", { input });
           const imageUrl = Array.isArray(output) ? output[0] : output;
           const res = await fetch(imageUrl);
           const imgBuffer = Buffer.from(await res.arrayBuffer());
@@ -168,9 +178,8 @@ export const createPostHandler = async (c: Context) => {
 
     let imageCounter = 0;
     for (const page of pagesToRender) {
-      if (page.type === "text") {
-        allPagesForPdf.push({ text: page.content, style: page.style });
-      } else if (page.type === "image") {
+      if (page.type === "text") allPagesForPdf.push({ text: page.content, style: page.style });
+      else if (page.type === "image") {
         allPagesForPdf.push(imageResults[imageCounter]);
         imageCounter++;
       }
@@ -201,7 +210,7 @@ export const createPostHandler = async (c: Context) => {
             fileSize: result.metadata.fileSize,
             dimensions: result.metadata.dimensions,
             generatedAt: new Date().toISOString(),
-            isPreview: !isSubscribed, // mark if only preview
+            isPreview: !isSubscribed,
           },
         },
         updatedAt: new Date(),

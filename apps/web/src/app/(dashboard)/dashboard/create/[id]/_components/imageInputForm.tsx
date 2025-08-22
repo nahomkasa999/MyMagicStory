@@ -15,44 +15,61 @@ import { compressImage } from "@/lib/compresor";
 type FormData = z.infer<typeof formSchema>;
 
 interface ImageUploadFormProps {
-  onProjectCreated?: (projectId: string) => void;
   onSetPreviewStatue: (ispreview: boolean) => void;
   onSuccess?: (result: { blob: Blob }) => void;
-
 }
 
-export default function ImageUploadForm({ onProjectCreated, onSuccess, onSetPreviewStatue }: ImageUploadFormProps) {
+// Helper to upload a single file to Cloudinary
+async function uploadToCloudinary(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+  return data.secure_url as string;
+}
+
+export default function ImageUploadForm({
+  onSuccess,
+  onSetPreviewStatue,
+}: ImageUploadFormProps) {
   const params = useParams();
   const id = params.id as string;
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      singleImage: undefined,
+      multipleImages: undefined,
+       // can now hold multiple files
     },
   });
 
   const { mutate, isPending, isSuccess } = useCreateStoryBook();
 
   async function onSubmit(data: FormData) {
-    if (!data.singleImage) return;
+    if (!data.multipleImages) return;
 
-    const compressedImage = await compressImage(data.singleImage);
+    const files = data.multipleImages instanceof FileList ? Array.from(data.multipleImages) : [data.multipleImages];
 
-    mutate({ data: { singleImage: compressedImage }, id }, {
+    // Compress all images first
+    const compressedFiles = await Promise.all(files.map(file => compressImage(file)));
+
+    // Upload all compressed images to Cloudinary
+    const cloudinaryUrls = await Promise.all(compressedFiles.map(file => uploadToCloudinary(file)));
+
+    //Send the URLs to your backend in a single request
+    await mutate({ data: { imageUrls: cloudinaryUrls }, id }, {
       onSuccess: (result) => {
-        if(result){
-          onSetPreviewStatue(result.isPreview)
+        onSetPreviewStatue(result.isPreview);
+        if (result.blob && onSuccess) {
+          onSuccess({ blob: result.blob });
         }
-        // Generate blob URL and send it back to parent
-        if (result?.blob) {
-          console.log(result)
-          const url = URL.createObjectURL(result.blob);
-          if (onSuccess) onSuccess({ blob: result.blob });
-        }
-
-        
-      }
+      },
     });
   }
 
@@ -66,9 +83,10 @@ export default function ImageUploadForm({ onProjectCreated, onSuccess, onSetPrev
 
         <CustomFileInput
           form={form}
-          name="singleImage"
-          label="Upload a Single Image"
-          description="Please upload one image in .jpg, .png, or .webp format (max 5MB)."
+          name="multipleImages"
+          label="Upload Images"
+          description="Please upload images in .jpg, .png, or .webp format (max 5MB each)."
+          multiple={true} // allows multiple files
         />
         
         <Button type="submit" className="w-full" disabled={isPending}>

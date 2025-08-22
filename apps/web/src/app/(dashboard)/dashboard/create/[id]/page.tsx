@@ -18,7 +18,6 @@ function Page() {
   return (
     <div>
       <ImageUploadForm 
-        onProjectCreated={setProjectId} 
         onSetPreviewStatue={setIspreview}
         onSuccess={handleUploadSuccess} 
       />

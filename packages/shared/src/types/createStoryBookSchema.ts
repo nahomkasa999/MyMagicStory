@@ -34,6 +34,6 @@ export const multipleImagesSchema = z.object({
 
 
 export const formSchema = z.object({
-  singleImage: singleImageSchema.shape.singleImage,
-  // multipleImages: multipleImagesSchema.shape.multipleImages,
+  // singleImage: singleImageSchema.shape.singleImage,
+  multipleImages: multipleImagesSchema.shape.multipleImages,
 });
