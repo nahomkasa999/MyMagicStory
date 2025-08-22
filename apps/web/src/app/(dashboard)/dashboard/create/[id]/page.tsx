@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 function Page() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [isPreview, setIspreview]= useState(true)
 
   const handleUploadSuccess = (result: { blob: Blob }) => {
     const url = URL.createObjectURL(result.blob);
@@ -18,6 +19,7 @@ function Page() {
     <div>
       <ImageUploadForm 
         onProjectCreated={setProjectId} 
+        onSetPreviewStatue={setIspreview}
         onSuccess={handleUploadSuccess} 
       />
 
@@ -28,6 +30,7 @@ function Page() {
       <div className="mt-8">
         <PDFViewer
           projectId={projectId || undefined}
+          isPreview={isPreview}
           pdfPath={pdfBlobUrl || (!projectId ? "/storybook.pdf" : undefined)}
           className="max-w-4xl mx-auto"
         />

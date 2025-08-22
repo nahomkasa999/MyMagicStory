@@ -65,11 +65,9 @@ async function generatePreviews(storybookId: string): Promise<StorybookPreviews>
   }
 
   const { data, error } = await $fetch("/generate-previews", {
-    method: "POST",
     body: { storybookId },
     headers: {
       authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
     },
   });
 

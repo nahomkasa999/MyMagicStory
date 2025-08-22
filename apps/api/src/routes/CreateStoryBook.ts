@@ -56,10 +56,9 @@ export const createPostHandler = async (c: Context) => {
       where: {
         userId: user.id,
         status: "ACTIVE",
-        currentPeriodEnd: { gt: new Date() }, // still valid
+        currentPeriodEnd: { gt: new Date() },
       },
     });
-
     const storyTemplate = await prisma.storyTemplate.findUnique({
       where: { id },
       select: { layoutJson: true, title: true },
@@ -117,7 +116,7 @@ export const createPostHandler = async (c: Context) => {
       };
     }
 
-    // limit pages if user has no subscription
+     //limit pages if user has no subscription
     let pagesToRender = layout.pages;
     const isSubscribed = !!subscription;
     if (!isSubscribed) {
@@ -140,7 +139,8 @@ export const createPostHandler = async (c: Context) => {
             aspect_ratio: "3:4",
           };
 
-          const output = await replicate.run("black-forest-labs/flux-kontext-pro", { input });
+          //const output = await replicate.run("black-forest-labs/flux-kontext-pro", { input });
+          const output = "hhdf"
           const imageUrl = Array.isArray(output) ? output[0] : output;
           const res = await fetch(imageUrl);
           const imgBuffer = Buffer.from(await res.arrayBuffer());

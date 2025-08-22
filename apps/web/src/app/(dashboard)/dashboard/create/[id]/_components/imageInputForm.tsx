@@ -16,10 +16,12 @@ type FormData = z.infer<typeof formSchema>;
 
 interface ImageUploadFormProps {
   onProjectCreated?: (projectId: string) => void;
+  onSetPreviewStatue: (ispreview: boolean) => void;
   onSuccess?: (result: { blob: Blob }) => void;
+
 }
 
-export default function ImageUploadForm({ onProjectCreated, onSuccess }: ImageUploadFormProps) {
+export default function ImageUploadForm({ onProjectCreated, onSuccess, onSetPreviewStatue }: ImageUploadFormProps) {
   const params = useParams();
   const id = params.id as string;
   
@@ -39,11 +41,17 @@ export default function ImageUploadForm({ onProjectCreated, onSuccess }: ImageUp
 
     mutate({ data: { singleImage: compressedImage }, id }, {
       onSuccess: (result) => {
+        if(result){
+          onSetPreviewStatue(result.isPreview)
+        }
         // Generate blob URL and send it back to parent
         if (result?.blob) {
+          console.log(result)
           const url = URL.createObjectURL(result.blob);
           if (onSuccess) onSuccess({ blob: result.blob });
         }
+
+        
       }
     });
   }
