@@ -6,7 +6,7 @@ type FormData = z.infer<typeof formSchema>;
 
 interface CreateStoryBookParams {
   data: {
-    imageUrls: string[]; 
+    imageUrls: string[];
   };
   id: string;
 }
@@ -17,14 +17,19 @@ interface CreateStoryBookResult {
   isPreview: boolean;
 }
 
-const createStoryBook = async ({ data, id }: CreateStoryBookParams): Promise<CreateStoryBookResult> => {
+const createStoryBook = async ({
+  data,
+  id,
+}: CreateStoryBookParams): Promise<CreateStoryBookResult> => {
   const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   if (!session?.access_token) {
     throw new Error("User not authenticated");
   }
@@ -32,7 +37,7 @@ const createStoryBook = async ({ data, id }: CreateStoryBookParams): Promise<Cre
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({ imageUrls: data.imageUrls }),
   });
@@ -41,14 +46,21 @@ const createStoryBook = async ({ data, id }: CreateStoryBookParams): Promise<Cre
     throw new Error("Failed to create story book");
   }
 
-  const blob = await response.blob();
-  const projectId = response.headers.get("X-Project-Id");
-  const isPreview = response.headers.get("X-Preview");
+ 
+  const json = await response.json();
+  console.log("Full response JSON:", json);
+
+
+  const blob = new Blob(
+    [Uint8Array.from(atob(json.pdfBase64), (c) => c.charCodeAt(0))],
+    { type: "application/pdf" }
+  );
+  console.log("Blob object:", blob);
 
   return {
     blob,
-    storybookId: projectId || id,
-    isPreview: !!isPreview,
+    storybookId: json.projectId || id,
+    isPreview: json.isPreview,
   };
 };
 

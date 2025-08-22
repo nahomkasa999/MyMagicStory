@@ -9,19 +9,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 const requestBodySchema = z.object({
-  type: z.enum(["subscription"]),
+  projectId: z.string(),
 });
 
-export const checkoutRoute = createRoute({
+export const buyBookRoute = createRoute({
   method: "post",
-  path: "/payment/checkout",
+  path: "payment/buy-book",
   tags: ["Stripe"],
   request: {
     body: {
-      content: {  
-        "application/json": {
-          schema: requestBodySchema,
-        },
+      content: {
+        "application/json": { schema: requestBodySchema },
       },
     },
   },
@@ -33,7 +31,7 @@ export const checkoutRoute = createRoute({
   },
 });
 
-export const checkoutHandler = async (c: Context) => {
+export const buyBookHandler = async (c: Context) => {
   const user = c.get("user");
   if (!user) return c.json({ error: "User not authenticated" }, 401);
 
@@ -41,38 +39,51 @@ export const checkoutHandler = async (c: Context) => {
   if (!body.success) return c.json({ error: "Invalid request", details: body.error.issues }, 400);
 
   try {
-    // Ensure user has a Stripe customer ID
-    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-    let stripeCustomerId =  dbUser?.stripeCustomerId;;
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: true } });
+    if (!dbUser) return c.json({ error: "User not found" }, 404);
+
+    const project = await prisma.project.findUnique({ where: { id: body.data.projectId } });
+    if (!project) return c.json({ error: "Project not found" }, 404);
+
+    // Determine discount
+    const isSubscribed = dbUser.subscriptions.some(sub => sub.status === "ACTIVE" && sub.currentPeriodEnd > new Date());
+    const priceCents = isSubscribed ? Math.round(3000 * 0.8) : 3000; 
+
+    // Ensure Stripe customer ID
+    let stripeCustomerId = dbUser.stripeCustomerId;
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.name || undefined,
+        email: dbUser.email,
+        name: dbUser.name || undefined,
       });
       stripeCustomerId = customer.id;
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { stripeCustomerId },
-      });
+      await prisma.user.update({ where: { id: dbUser.id }, data: { stripeCustomerId } });
     }
+
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode: "payment",
       payment_method_types: ["card"],
       customer: stripeCustomerId,
       line_items: [
         {
-          price: process.env.STRIPE_SUBSCRIPTION_PRICE_ID!,
+          price_data: {
+            currency: "usd",
+            unit_amount: priceCents,
+            product_data: {
+              name: project.title || "Ebook",
+              description: "Your personalized storybook",
+            },
+          },
           quantity: 1,
         },
       ],
-      cancel_url: `${process.env.FRONTEND_URL}/dashboard?canceled=true`,
       success_url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.FRONTEND_URL}/dashboard?canceled=true`,
     });
 
     return c.json({ url: session.url });
   } catch (error: any) {
-    // console.error("Stripe checkout error:", error);
+    console.error("Stripe buy-book error:", error);
     return c.json({ error: error.message || "Internal server error" }, 500);
   }
 };

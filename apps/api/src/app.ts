@@ -32,6 +32,7 @@ import {
   getPreviewsHandler,
 } from "./routes/pdf-preview.js";
 import { checkoutRoute, checkoutHandler } from "./routes/payment/stripeCheckout.js";
+import { buyBookHandler, buyBookRoute } from "./routes/payment/onetimePayment.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -66,7 +67,7 @@ app.use("/generate-previews", supabaseAuth)
 app.use("/previews/*", supabaseAuth)
 
 //stirpe authenticated
-app.use("/api/*", supabaseAuth)
+app.use("/payment/*", supabaseAuth)
 
 //authentication
 app.openapi(CreateUserInDB, CreateUserInDBHandler )
@@ -84,6 +85,8 @@ app.openapi(getPreviewsRoute, getPreviewsHandler);
 
 //stripe
 app.openapi(checkoutRoute, checkoutHandler)
+/// buy book
+app.openapi(buyBookRoute, buyBookHandler)
 
 
 

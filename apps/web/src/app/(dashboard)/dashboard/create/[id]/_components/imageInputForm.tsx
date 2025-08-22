@@ -16,6 +16,7 @@ type FormData = z.infer<typeof formSchema>;
 
 interface ImageUploadFormProps {
   onSetPreviewStatue: (ispreview: boolean) => void;
+  onSetProjectId:(projectId:string) => void;
   onSuccess?: (result: { blob: Blob }) => void;
 }
 
@@ -37,6 +38,7 @@ async function uploadToCloudinary(file: File) {
 export default function ImageUploadForm({
   onSuccess,
   onSetPreviewStatue,
+  onSetProjectId
 }: ImageUploadFormProps) {
   const params = useParams();
   const id = params.id as string;
@@ -65,7 +67,9 @@ export default function ImageUploadForm({
     //Send the URLs to your backend in a single request
     await mutate({ data: { imageUrls: cloudinaryUrls }, id }, {
       onSuccess: (result) => {
+        console.log(result)
         onSetPreviewStatue(result.isPreview);
+        result.storybookId && onSetProjectId(result.storybookId)
         if (result.blob && onSuccess) {
           onSuccess({ blob: result.blob });
         }

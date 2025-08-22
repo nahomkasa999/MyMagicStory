@@ -3,6 +3,10 @@
     "figma-dev-mode": {
       "type": "sse",
       "url": "http://127.0.0.1:3845/sse"
+    },
+    "componentbuilder": {
+      "type": "sse",
+      "url": "https://tailark.com/r/pricing-5.json"
     }
   }
 }

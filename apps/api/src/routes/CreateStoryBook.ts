@@ -7,7 +7,11 @@ import { z } from "zod";
 import { prisma } from "../db/index.js";
 import fetch from "node-fetch";
 import pMap from "p-map";
-import { EnhancedPDFGenerator, PreviewGenerator, layoutJsonSchema } from "../services/pdf/index.js";
+import {
+  EnhancedPDFGenerator,
+  PreviewGenerator,
+  layoutJsonSchema,
+} from "../services/pdf/index.js";
 import type { PageRenderData } from "../services/pdf/index.js";
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
@@ -51,7 +55,7 @@ export const createPostRoute = createRoute({
     },
   },
   responses: { 200: { description: "PDF generated" } },
-})
+});
 
 export const createPostHandler = async (c: Context) => {
   const id = c.req.param("id");
@@ -61,8 +65,8 @@ export const createPostHandler = async (c: Context) => {
 
   try {
     const { imageUrls }: { imageUrls: string[] } = await c.req.json();
-if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided" }, 400);
-
+    if (!imageUrls || !imageUrls.length)
+      return c.json({ error: "No images provided" }, 400);
 
     const subscription = await prisma.subscription.findFirst({
       where: {
@@ -91,7 +95,9 @@ if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided"
     try {
       layout = layoutJsonSchema.parse(storyTemplate.layoutJson);
     } catch {
-      const legacyLayout = legacyLayoutJsonSchema.parse(storyTemplate.layoutJson);
+      const legacyLayout = legacyLayoutJsonSchema.parse(
+        storyTemplate.layoutJson
+      );
       layout = {
         title: legacyLayout.title,
         subtitle: undefined,
@@ -144,12 +150,10 @@ if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided"
         try {
           const input = {
             prompt: page.content,
-            style_reference_images: imageUrls, 
+            style_reference_images: imageUrls,
             output_format: "png",
             aspect_ratio: "3:4",
           };
-          console.log(input)
-         
           // const output = await replicate.run("ideogram-ai/ideogram-v3-turbo", { input });
           const output = "stirng";
           const imageUrl = Array.isArray(output) ? output[0] : output;
@@ -160,7 +164,8 @@ if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided"
 
           return { imagePath: filename, style: page.style, idx };
         } catch (error) {
-          console.error(`Failed to generate image for page ${idx}:`, error);
+          // console.error(`Failed to generate image for page ${idx}:`, error);
+          console.error("Failed to generate image for ");
           return {
             text: "Image generation failed",
             style: {
@@ -179,7 +184,8 @@ if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided"
 
     let imageCounter = 0;
     for (const page of pagesToRender) {
-      if (page.type === "text") allPagesForPdf.push({ text: page.content, style: page.style });
+      if (page.type === "text")
+        allPagesForPdf.push({ text: page.content, style: page.style });
       else if (page.type === "image") {
         allPagesForPdf.push(imageResults[imageCounter]);
         imageCounter++;
@@ -197,7 +203,8 @@ if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided"
       try {
         fs.unlinkSync(`photo_gen_${i}.png`);
       } catch (error) {
-        console.warn(`Failed to clean up temporary file photo_gen_${i}.png:`, error);
+        // console.warn(`Failed to clean up temporary file photo_gen_${i}.png:`, error);
+        console.log("Failed to clean up");
       }
     }
 
@@ -217,20 +224,27 @@ if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided"
         updatedAt: new Date(),
       },
     });
-
-    return c.body(result.pdfBuffer, 200, {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": "inline; filename=storybook.pdf",
-      "X-Page-Count": result.metadata.pageCount.toString(),
-      "X-File-Size": result.metadata.fileSize.toString(),
-      "X-Project-Id": project.id,
-      "X-Preview": (!isSubscribed).toString(),
+    return c.json({
+      pdfBase64: result.pdfBuffer.toString("base64"),
+      pageCount: result.metadata.pageCount,
+      fileSize: result.metadata.fileSize,
+      projectId: project.id,
+      isPreview: !isSubscribed,
     });
   } catch (error) {
     console.error("Storybook generation failed:", error);
     if (error instanceof z.ZodError) {
-      return c.json({ error: "Invalid template layout format", details: error.issues }, 400);
+      return c.json(
+        { error: "Invalid template layout format", details: error.issues },
+        400
+      );
     }
-    return c.json({ error: "Failed to generate storybook", message: error instanceof Error ? error.message : "Unknown error" }, 500);
+    return c.json(
+      {
+        error: "Failed to generate storybook",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      500
+    );
   }
 };
