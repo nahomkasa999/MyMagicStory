@@ -2,6 +2,8 @@
 
 # VERY VERY VERY VERY VERY IMPORTANT RULE TO APPLY Before implementing, editing file or adding anycode ask for comformation to edit it, -> the  user will study your code and give you recommendation or approve your code
 
+# when ever you want to test, tell me how to test it and I will test for you.
+
 # never create a component that could be imported form shadcn
 
 # ZOD USAGE

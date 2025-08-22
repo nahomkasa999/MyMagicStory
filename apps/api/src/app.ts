@@ -21,6 +21,16 @@ import {
   getAllTemplatesRoute,
   getAllTemplatesHandler,
 } from "./routes/user/choiceTemplate.js";
+import {
+  getUserStorybooksRoute,
+  getUserStorybooksHandler,
+} from "./routes/user/storybooks.js";
+import {
+  previewRoute,
+  previewHandler,
+  getPreviewsRoute,
+  getPreviewsHandler,
+} from "./routes/pdf-preview.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -46,7 +56,13 @@ app.onError((err, c) => {
 });
 
 app.use("/template", supabaseAuth)
-//app.use("/user/templates", supabaseAuth)
+app.use("/user/storybooks", supabaseAuth)
+app.use("/user/templates", supabaseAuth)
+app.use("/post-data/*", supabaseAuth)
+
+//dashbaord grid
+app.use("/generate-previews", supabaseAuth)
+app.use("/previews/*", supabaseAuth)
 
 //authentication
 app.openapi(CreateUserInDB, CreateUserInDBHandler )
@@ -56,6 +72,11 @@ app.openapi(createPostRoute, createPostHandler);
 app.openapi(getSecureImageUrlRoute, getSecureImageUrlHandler);
 app.openapi(createTemplateRoute, createTemplateHandler);
 app.openapi(getAllTemplatesRoute, getAllTemplatesHandler);
+app.openapi(getUserStorybooksRoute, getUserStorybooksHandler);
+
+// dashbaord story book generation place.
+app.openapi(previewRoute, previewHandler);
+app.openapi(getPreviewsRoute, getPreviewsHandler);
 
 
 

@@ -67,6 +67,7 @@ export const CreateUserInDBHandler = async (c: Context) => {
         const body = await c.req.json()
         const validatedBody = signupSchema.parse(body)
         const {id, name, email, role, avatarUrl} = validatedBody
+        console.log(id)
         const user = await prisma.user.create({
             data: {
                 id,
