@@ -49,7 +49,7 @@ export function useTemplate() {
       return data;
     },
     onSuccess: (data) => {
-      console.log(data!.message!)
+      console.log(data)
       toast.success('Template created successfully!');
     },
     onError: (err: any) => {

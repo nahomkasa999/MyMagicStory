@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSession } from "@/app/hooks/session";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.3.93/build/pdf.worker.min.mjs`;
 
@@ -14,8 +16,7 @@ interface PDFViewerPropsUpdated {
 }
 
 export default function PDFViewer({ projectId, isPreview, pdfPath, className = "" }: PDFViewerPropsUpdated) {
-
-
+  const session = useSession()
   const [state, setState] = useState({
     isLoading: true,
     error: null as string | null,
@@ -24,6 +25,27 @@ export default function PDFViewer({ projectId, isPreview, pdfPath, className = "
     isPreview: isPreview,
   });
 
+ const handleSubscribeClick = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/checkout", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+           Authorization: `${session.session?.access_token}`
+        },
+        body: JSON.stringify({ type: "subscription" }),
+      });
+      const data = await res.json();
+      console.log(data)
+      if(res.ok){
+
+      }
+      if (data.url) window.location.href = data.url;
+      else console.error("No checkout URL returned");
+    } catch (err) {
+      // console.error("Checkout failed", err);
+    }
+  };
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setState((prev) => ({ ...prev, isLoading: false, numPages }));
   };
@@ -50,7 +72,9 @@ export default function PDFViewer({ projectId, isPreview, pdfPath, className = "
           />
           {isBlur && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-primary text-xl font-semibold">
-              Subscribe to get full PDF
+              <Button onClick={handleSubscribeClick}>
+                Subscribe to get full PDF
+              </Button>   
             </div>
           )}
         </div>

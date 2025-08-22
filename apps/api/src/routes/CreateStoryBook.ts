@@ -150,7 +150,8 @@ if (!imageUrls || !imageUrls.length) return c.json({ error: "No images provided"
           };
           console.log(input)
          
-          const output = await replicate.run("ideogram-ai/ideogram-v3-turbo", { input });
+          // const output = await replicate.run("ideogram-ai/ideogram-v3-turbo", { input });
+          const output = "stirng";
           const imageUrl = Array.isArray(output) ? output[0] : output;
           const res = await fetch(imageUrl);
           const imgBuffer = Buffer.from(await res.arrayBuffer());

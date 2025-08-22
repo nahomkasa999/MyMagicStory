@@ -10,31 +10,31 @@ datasource db {
 }
 
 model User {
-  id             String           @id @default(dbgenerated("auth.uid()")) @db.Uuid
-  email          String           @unique
-  name           String?
-  role           UserRole         @default(USER)
-  avatarUrl      String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  orders         Order[]
-  projects       Project[]
-  subscriptions  Subscription[]
+  email            String         @unique
+  name             String?
+  role             UserRole       @default(USER)
+  avatarUrl        String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  id               String         @id @default(dbgenerated("auth.uid()")) @db.Uuid
+  stripeCustomerId String?
+  orders           Order[]
+  projects         Project[]
+  subscriptions    Subscription[]
 }
 
 model Subscription {
-  id                String      @id @default(cuid())
-  userId            String      @db.Uuid
-  stripeId          String?     @unique
-  status            SubStatus   @default(ACTIVE)
-  startedAt         DateTime    @default(now())
-  currentPeriodEnd  DateTime
-  digitalBooksUsed  Int         @default(0)
-  digitalBookQuota  Int         @default(10)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  userId           String    @db.Uuid
+  stripeId         String?   @unique
+  status           SubStatus @default(ACTIVE)
+  startedAt        DateTime  @default(now())
+  currentPeriodEnd DateTime
+  digitalBooksUsed Int       @default(0)
+  digitalBookQuota Int       @default(10)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -59,13 +59,13 @@ model StoryTemplate {
 
 model Project {
   id             String          @id @default(cuid())
-  userId         String          @db.Uuid
   templateId     String
   title          String?
   status         ProjectStatus   @default(DRAFT)
   generatedPages Json?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  userId         String          @db.Uuid
   orders         Order[]
   template       StoryTemplate   @relation(fields: [templateId], references: [id])
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -88,23 +88,22 @@ model UploadedImage {
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  userId      String      @db.Uuid
+  id          String        @id @default(cuid())
   projectId   String
-  stripeId    String?     @unique
+  stripeId    String?       @unique
   amount      Int
-  currency    String      @default("USD")
-  status      OrderStatus @default(PENDING)
+  currency    String        @default("USD")
+  status      OrderStatus   @default(PENDING)
   trackingUrl String?
-  productType ProductType
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   coverType   CoverType?
   pages       Int?
+  productType ProductType
   shipping    ShippingType?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  project     Project     @relation(fields: [projectId], references: [id])
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String        @db.Uuid
+  project     Project       @relation(fields: [projectId], references: [id])
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])

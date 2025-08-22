@@ -25,7 +25,7 @@ export default function ChoiceTemplatePage() {
           <div
             key={template.id}
             className="cursor-pointer"
-            onClick={() => router.push(`/create/${template.id}`)}
+            onClick={() => router.push(`create/${template.id}`)}
           >
             <Card>
               <CardHeader>
