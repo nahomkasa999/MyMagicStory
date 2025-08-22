@@ -22,11 +22,6 @@ function Page() {
         onSetProjectId={setProjectId}
         onSuccess={handleUploadSuccess} 
       />
-
-      <div className='w-full'>
-        <Button className='m-auto'>Pay to get</Button>
-      </div>
-
       <div className="mt-8">
         <PDFViewer
           projectId={projectId || undefined}

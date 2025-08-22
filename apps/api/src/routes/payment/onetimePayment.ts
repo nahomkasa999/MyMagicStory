@@ -10,6 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const requestBodySchema = z.object({
   projectId: z.string(),
+  returnUrl: z.string()
 });
 
 export const buyBookRoute = createRoute({
@@ -47,7 +48,7 @@ export const buyBookHandler = async (c: Context) => {
 
     // Determine discount
     const isSubscribed = dbUser.subscriptions.some(sub => sub.status === "ACTIVE" && sub.currentPeriodEnd > new Date());
-    const priceCents = isSubscribed ? Math.round(3000 * 0.8) : 3000; 
+    const priceCents = isSubscribed ? Math.round(3000 * 0.8) : 3000;
 
     // Ensure Stripe customer ID
     let stripeCustomerId = dbUser.stripeCustomerId;
@@ -60,6 +61,7 @@ export const buyBookHandler = async (c: Context) => {
       await prisma.user.update({ where: { id: dbUser.id }, data: { stripeCustomerId } });
     }
 
+    // This is where we redirect after payment
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -77,8 +79,8 @@ export const buyBookHandler = async (c: Context) => {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.FRONTEND_URL}/dashboard?canceled=true`,
+      success_url: `${body.data.returnUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&project_id=${body.data.projectId}`,
+      cancel_url: `${body.data.returnUrl}/payment/cancel?project_id=${body.data.projectId}`,
     });
 
     return c.json({ url: session.url });

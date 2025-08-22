@@ -25,6 +25,7 @@ export default function PDFViewer({ projectId, isPreview, pdfPath, className = "
     isPreview: isPreview,
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const returnUrl = window.location.href; 
 
   const handleBuyNowClick = async () => {
      if (!projectId) {
@@ -39,7 +40,7 @@ export default function PDFViewer({ projectId, isPreview, pdfPath, className = "
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.session?.access_token}`,
         },
-        body: JSON.stringify({ projectId }),
+        body: JSON.stringify({ projectId, returnUrl }),
       });
 
       const data = await res.json();

@@ -66,9 +66,27 @@ export const layoutJsonSchema = z.object({
   })),
 });
 
+
+export const legacyTextPageSchema = z.object({
+  type: z.literal("text"),
+  content: z.string(),
+  linkToPrevious: z.boolean(),
+});
+export const legacyImagePageSchema = z.object({
+  type: z.literal("image"),
+  content: z.string().optional(),
+  linkToPrevious: z.boolean(),
+});
+export const legacyLayoutJsonSchema = z.object({
+  title: z.string(),
+  pages: z.array(z.union([legacyTextPageSchema, legacyImagePageSchema])),
+});
+
+
 export type TextPage = z.infer<typeof textPageSchema>;
 export type ImagePage = z.infer<typeof imagePageSchema>;
 export type LayoutJSON = z.infer<typeof layoutJsonSchema>;
+export type LegacyPage = z.infer<typeof legacyLayoutJsonSchema>["pages"][number];
 
 export interface PageRenderData {
   text?: string;
