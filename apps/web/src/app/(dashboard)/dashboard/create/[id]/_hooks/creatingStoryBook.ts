@@ -3,7 +3,7 @@ import { z } from "zod";
 import { SendDataType } from "@mymagicstory/shared/types";
 
 interface CreateStoryBookParams {
-  data: SendDataType; // raw images (compressed File objects)
+  data: SendDataType;
   id: string;
 }
 

@@ -115,15 +115,18 @@ export class PDFPageGenerator {
     this.imageUrls = urls;
   }
 
-  async generatePages(): Promise<{ layout: LayoutJSON; pages: PageRenderData[] }> {
+    async generatePages(startingPage: number = 0): Promise<{ layout: LayoutJSON; pages: PageRenderData[] }> {
     await this.prepareImageUrls();
 
     let pagesToRender = [...this.layout.pages];
     if (!this.subscription) pagesToRender = pagesToRender.slice(0, 3);
 
+    // apply starting page offset
+    pagesToRender = pagesToRender.slice(startingPage-1);
+
     const allPages: PageRenderData[] = [];
     const imagePages = pagesToRender
-      .map((page, idx) => ({ page, idx }))
+      .map((page, idx) => ({ page, idx: idx + startingPage }))
       .filter((p) => p.page.type === "image" && p.page.content);
 
     const imageResults = await pMap(
@@ -174,4 +177,5 @@ export class PDFPageGenerator {
 
     return { layout: this.layout, pages: allPages };
   }
+
 }

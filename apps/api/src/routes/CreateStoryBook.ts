@@ -56,7 +56,7 @@ export const createPostHandler = async (c: Context) => {
         currentPeriodEnd: { gt: new Date() },
       },
     });
-
+    console.log(subscription)
     const storyTemplate = await prisma.storyTemplate.findUnique({
       where: { id },
       select: { layoutJson: true, title: true },

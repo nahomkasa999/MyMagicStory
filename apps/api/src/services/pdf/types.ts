@@ -98,6 +98,8 @@ export interface PDFGenerationOptions {
   outputFormat: "print" | "web";
   generatePreviews: boolean;
   uploadToStorage: boolean;
+  append?: boolean;
+  existingPdfBuffer?: Buffer;     
 }
 
 export interface PDFGenerationResult {

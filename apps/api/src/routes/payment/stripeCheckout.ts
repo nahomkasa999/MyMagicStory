@@ -50,7 +50,6 @@ export const checkoutHandler = async (c: Context) => {
         name: user.name || undefined,
       });
       stripeCustomerId = customer.id;
-
       await prisma.user.update({
         where: { id: user.id },
         data: { stripeCustomerId },

@@ -45,7 +45,7 @@ export default function Pricing() {
                                 <h3 className="text-2xl font-semibold">Pro Plan</h3>
                                 <p className="mt-2 text-lg">For individuals and small teams</p>
                                 <span className="mb-6 mt-12 inline-block text-6xl font-bold">
-                                    <span className="text-4xl">$</span>19
+                                    <span className="text-4xl">$</span>9.95
                                 </span>
 
                                 <div className="flex justify-center">

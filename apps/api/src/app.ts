@@ -33,6 +33,7 @@ import {
 } from "./routes/pdf-preview.js";
 import { checkoutRoute, checkoutHandler } from "./routes/payment/stripeCheckout.js";
 import { buyBookHandler, buyBookRoute } from "./routes/payment/onetimePayment.js";
+import { verifyAndGenerateHandler, verifyAndGenerateRoute } from "./routes/payment/verifyandcontinuePdf.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -85,8 +86,8 @@ app.openapi(getPreviewsRoute, getPreviewsHandler);
 
 //stripe
 app.openapi(checkoutRoute, checkoutHandler)
-/// buy book
 app.openapi(buyBookRoute, buyBookHandler)
+app.openapi(verifyAndGenerateRoute, verifyAndGenerateHandler)
 
 
 

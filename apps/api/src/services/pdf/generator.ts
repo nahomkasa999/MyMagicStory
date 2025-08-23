@@ -1,9 +1,21 @@
-import { PDFDocument, StandardFonts, rgb, cmyk, PDFFont, PDFPage } from "pdf-lib";
+import {
+  PDFDocument,
+  StandardFonts,
+  rgb,
+  cmyk,
+  PDFFont,
+  PDFPage,
+} from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import sharp from "sharp";
 import { createCanvas, loadImage, CanvasRenderingContext2D } from "canvas";
 import * as fs from "node:fs";
-import type { LayoutJSON, PageRenderData, PDFGenerationOptions, PDFGenerationResult } from "./types.js";
+import type {
+  LayoutJSON,
+  PageRenderData,
+  PDFGenerationOptions,
+  PDFGenerationResult,
+} from "./types.js";
 
 export class EnhancedPDFGenerator {
   private pdfDoc: PDFDocument | null = null;
@@ -25,14 +37,19 @@ export class EnhancedPDFGenerator {
   ): Promise<PDFGenerationResult> {
     try {
       // Initialize PDF document
-      this.pdfDoc = await PDFDocument.create();
+      if (options.append && options.existingPdfBuffer) {
+        this.pdfDoc = await PDFDocument.load(options.existingPdfBuffer);
+      } else {
+        this.pdfDoc = await PDFDocument.create();
+      }
       this.pdfDoc.registerFontkit(fontkit);
-
       // Load fonts
       await this.loadFonts();
 
       // Generate cover page
-      await this.generateCoverPage(layout);
+      if (!(options.append && options.existingPdfBuffer)) {
+        await this.generateCoverPage(layout);
+      }
 
       // Generate content pages
       for (let i = 0; i < pages.length; i++) {
@@ -43,9 +60,10 @@ export class EnhancedPDFGenerator {
       const pdfBuffer = Buffer.from(await this.pdfDoc.save());
 
       // Apply color profile conversion if needed
-      const processedPdfBuffer = options.outputFormat === "print" 
-        ? await this.convertToCMYK(pdfBuffer)
-        : pdfBuffer;
+      const processedPdfBuffer =
+        options.outputFormat === "print"
+          ? await this.convertToCMYK(pdfBuffer)
+          : pdfBuffer;
 
       const result: PDFGenerationResult = {
         pdfBuffer: processedPdfBuffer,
@@ -61,13 +79,16 @@ export class EnhancedPDFGenerator {
 
       // Generate previews if requested
       if (options.generatePreviews) {
-        result.previewUrls = await this.generateWebPPreviews(processedPdfBuffer);
+        result.previewUrls =
+          await this.generateWebPPreviews(processedPdfBuffer);
       }
 
       return result;
     } catch (error) {
       console.error("PDF generation failed:", error);
-      throw new Error(`PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `PDF generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -79,7 +100,9 @@ export class EnhancedPDFGenerator {
 
     // Load standard fonts
     const helvetica = await this.pdfDoc.embedFont(StandardFonts.Helvetica);
-    const helveticaBold = await this.pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const helveticaBold = await this.pdfDoc.embedFont(
+      StandardFonts.HelveticaBold
+    );
     const timesRoman = await this.pdfDoc.embedFont(StandardFonts.TimesRoman);
 
     this.fonts.set("Helvetica", helvetica);
@@ -102,7 +125,8 @@ export class EnhancedPDFGenerator {
       layout.settings.pageSize.height,
     ]);
 
-    const font = this.fonts.get("Helvetica-Bold") || this.fonts.get("Helvetica")!;
+    const font =
+      this.fonts.get("Helvetica-Bold") || this.fonts.get("Helvetica")!;
     const titleFontSize = 40;
     const subtitleFontSize = 20;
 
@@ -113,22 +137,27 @@ export class EnhancedPDFGenerator {
       y: page.getHeight() / 2 + 50,
       size: titleFontSize,
       font,
-      color: layout.settings.colorProfile === "CMYK" 
-        ? cmyk(0, 0, 0, 1) 
-        : rgb(0, 0, 0),
+      color:
+        layout.settings.colorProfile === "CMYK"
+          ? cmyk(0, 0, 0, 1)
+          : rgb(0, 0, 0),
     });
 
     // Draw subtitle if provided
     if (layout.subtitle) {
-      const subtitleWidth = font.widthOfTextAtSize(layout.subtitle, subtitleFontSize);
+      const subtitleWidth = font.widthOfTextAtSize(
+        layout.subtitle,
+        subtitleFontSize
+      );
       page.drawText(layout.subtitle, {
         x: (page.getWidth() - subtitleWidth) / 2,
         y: page.getHeight() / 2,
         size: subtitleFontSize,
         font,
-        color: layout.settings.colorProfile === "CMYK" 
-          ? cmyk(0, 0, 0, 0.7) 
-          : rgb(0.3, 0.3, 0.3),
+        color:
+          layout.settings.colorProfile === "CMYK"
+            ? cmyk(0, 0, 0, 0.7)
+            : rgb(0.3, 0.3, 0.3),
       });
     }
   }
@@ -166,7 +195,8 @@ export class EnhancedPDFGenerator {
     if (!pageData.text || !pageData.style) return;
 
     const style = pageData.style as any; // Type assertion for text style
-    const font = this.fonts.get(style.fontFamily) || this.fonts.get("Helvetica")!;
+    const font =
+      this.fonts.get(style.fontFamily) || this.fonts.get("Helvetica")!;
     const fontSize = style.fontSize || 18;
     const margin = style.margin || { top: 50, bottom: 50, left: 50, right: 50 };
 
@@ -176,7 +206,7 @@ export class EnhancedPDFGenerator {
 
     // Wrap text to fit within the text area
     const lines = this.wrapText(pageData.text, textWidth, font, fontSize);
-    
+
     // Calculate starting Y position for vertical centering
     const totalTextHeight = lines.length * (fontSize + 4);
     let y = page.getHeight() - margin.top - (textHeight - totalTextHeight) / 2;
@@ -184,14 +214,17 @@ export class EnhancedPDFGenerator {
     // Draw each line
     for (const line of lines) {
       let x: number;
-      
+
       // Calculate X position based on alignment
       switch (style.alignment) {
         case "left":
           x = margin.left;
           break;
         case "right":
-          x = page.getWidth() - margin.right - font.widthOfTextAtSize(line, fontSize);
+          x =
+            page.getWidth() -
+            margin.right -
+            font.widthOfTextAtSize(line, fontSize);
           break;
         case "center":
         default:
@@ -204,9 +237,10 @@ export class EnhancedPDFGenerator {
         y,
         size: fontSize,
         font,
-        color: layout.settings.colorProfile === "CMYK" 
-          ? cmyk(0, 0, 0, 1) 
-          : rgb(0, 0, 0),
+        color:
+          layout.settings.colorProfile === "CMYK"
+            ? cmyk(0, 0, 0, 1)
+            : rgb(0, 0, 0),
       });
 
       y -= fontSize + 4;
@@ -237,7 +271,7 @@ export class EnhancedPDFGenerator {
 
       // Embed image in PDF
       const image = await this.pdfDoc!.embedPng(processedImageBuffer);
-      
+
       // Calculate dimensions and position
       const { width, height } = this.calculateImageDimensions(
         image.width,
@@ -280,16 +314,16 @@ export class EnhancedPDFGenerator {
     }
   ): Promise<Buffer> {
     const imageBuffer = fs.readFileSync(imagePath);
-    
+
     let sharpImage = sharp(imageBuffer)
       .resize(
-        Math.round(options.width * options.resolution / 72),
-        Math.round(options.height * options.resolution / 72),
+        Math.round((options.width * options.resolution) / 72),
+        Math.round((options.height * options.resolution) / 72),
         { fit: "inside", withoutEnlargement: false }
       )
       .png({ quality: 100 });
 
-    // Convert to CMYK if needed (Sharp doesn't support CMYK directly, 
+    // Convert to CMYK if needed (Sharp doesn't support CMYK directly,
     // so we'll keep RGB for now and handle CMYK conversion at PDF level)
     if (options.colorProfile === "CMYK") {
       // TODO: Implement proper CMYK conversion
@@ -319,7 +353,7 @@ export class EnhancedPDFGenerator {
     switch (fit) {
       case "fill":
         return { width: availableWidth, height: availableHeight };
-      
+
       case "contain":
         const scaleContain = Math.min(
           availableWidth / imageWidth,
@@ -329,7 +363,7 @@ export class EnhancedPDFGenerator {
           width: imageWidth * scaleContain,
           height: imageHeight * scaleContain,
         };
-      
+
       case "cover":
       default:
         const scaleCover = Math.max(
@@ -361,13 +395,13 @@ export class EnhancedPDFGenerator {
       // Use PreviewGenerator to create WebP previews
       const { PreviewGenerator } = await import("./preview.js");
       const previewGenerator = new PreviewGenerator();
-      
+
       const result = await previewGenerator.generateWebPPreviews(pdfBuffer, {
         quality: 80,
         width: 800,
         generateBlurred: false, // Only clear previews for this method
       });
-      
+
       return result.clear;
     } catch (error) {
       console.error("Failed to generate WebP previews:", error);
@@ -378,7 +412,12 @@ export class EnhancedPDFGenerator {
   /**
    * Wrap text to fit within specified width
    */
-  private wrapText(text: string, maxWidth: number, font: PDFFont, fontSize: number): string[] {
+  private wrapText(
+    text: string,
+    maxWidth: number,
+    font: PDFFont,
+    fontSize: number
+  ): string[] {
     const words = text.split(" ");
     const lines: string[] = [];
     let currentLine = "";
