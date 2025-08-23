@@ -10,6 +10,7 @@ import { ValueAndFooterSection } from '@/app/(landing)/_components/value-and-foo
 import { supabase } from "@/lib/supabase/supabaseClient";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Pricing from './_components/pricing';
 
 export default function Page() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function Page() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        router.replace("/dashboard"); // already logged in
+        // router.replace("/dashboard"); // already logged in
       }
     });
   }, [router]);
@@ -27,6 +28,7 @@ export default function Page() {
       <FeatureSection />
       <ExampleSection />
       <BooksSection />
+      <Pricing/>
       <ReviewSection />
       <FaqSection />
       <ValueAndFooterSection />

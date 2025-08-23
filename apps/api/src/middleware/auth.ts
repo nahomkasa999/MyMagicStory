@@ -18,3 +18,4 @@ export async function supabaseAuth(c: Context, next: Next) {
   c.set("user", user);
   await next();
 }
+  

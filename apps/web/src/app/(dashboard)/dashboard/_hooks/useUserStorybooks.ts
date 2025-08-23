@@ -6,8 +6,8 @@ import { supabase } from "@/lib/supabase/supabaseClient";
 import { type FrontendUser, type FrontendStorybook } from "../../../../../types/dashboard-types";
 import { z } from "zod";
 
-// Create schema that matches the actual API response
-const apiUserStorybooksResponseSchema = z.object({
+// Backend API response schema
+export const apiUserStorybooksResponseSchema = z.object({
   message: z.string(),
   data: z.object({
     user: z.object({
@@ -18,19 +18,22 @@ const apiUserStorybooksResponseSchema = z.object({
       avatarUrl: z.string().nullable(),
       createdAt: z.string(),
       updatedAt: z.string(),
+      isSubscribed: z.boolean(),
     }),
-    storybooks: z.array(z.object({
-      id: z.string(),
-      title: z.string().nullable(),
-      status: z.enum(["DRAFT", "COMPLETED", "PURCHASED"]),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-      template: z.object({
+    storybooks: z.array(
+      z.object({
         id: z.string(),
-        title: z.string(),
-        coverImageUrl: z.string(),
-      }),
-    })),
+        title: z.string().nullable(),
+        status: z.enum(["DRAFT", "COMPLETED", "PURCHASED"]),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+        template: z.object({
+          id: z.string(),
+          title: z.string(),
+          coverImageUrl: z.string(),
+        }),
+      })
+    ),
   }),
 });
 
@@ -41,20 +44,19 @@ export const storybooksSchema = createSchema({
   },
 });
 
-// Create fetch instance
-  const $fetch = createFetch({
+// Fetch instance
+const $fetch = createFetch({
   baseURL: "http://localhost:3001",
   schema: storybooksSchema,
 });
 
-// Helper function to get auth token
+// Get auth token from Supabase
 async function getAuthToken() {
   const session = await supabase.auth.getSession();
   return session.data.session?.access_token;
 }
 
-
-// Helper function to transform backend data to frontend format
+// Transform backend data to frontend format
 function transformStorybookData(backendData: any): {
   user: FrontendUser;
   storybooks: FrontendStorybook[];
@@ -63,7 +65,7 @@ function transformStorybookData(backendData: any): {
     name: backendData.user.name || "Unknown User",
     email: backendData.user.email,
     avatar: backendData.user.avatarUrl || undefined,
-    plan: backendData.user.role === "ADMIN" ? "paid" : "free", // Simple mapping
+    plan: backendData.user.isSubscribed ? "paid" : "free", // now uses isSubscribed
   };
 
   const storybooks: FrontendStorybook[] = backendData.storybooks.map((storybook: any) => ({
@@ -79,7 +81,7 @@ function transformStorybookData(backendData: any): {
   return { user, storybooks };
 }
 
-// Helper function to map backend status to frontend status
+// Map backend status to frontend status
 function mapStatus(backendStatus: string): "completed" | "draft" | "processing" {
   switch (backendStatus) {
     case "COMPLETED":
@@ -92,14 +94,14 @@ function mapStatus(backendStatus: string): "completed" | "draft" | "processing" 
   }
 }
 
-// Helper function to calculate page count based on status
+// Calculate page count
 function calculatePageCount(status: string): number {
   switch (status) {
     case "COMPLETED":
     case "PURCHASED":
-      return Math.floor(Math.random() * 15) + 8; // Random between 8-22
+      return Math.floor(Math.random() * 15) + 8; // 8-22 pages
     case "DRAFT":
-      return Math.floor(Math.random() * 8) + 1; // Random between 1-8
+      return Math.floor(Math.random() * 8) + 1; // 1-8 pages
     default:
       return 0;
   }
@@ -107,29 +109,26 @@ function calculatePageCount(status: string): number {
 
 // Fetch function
 async function fetchUserStorybooks() {
-  const token = await getAuthToken()
-  
-  if (!token) {
-    throw new Error("No authentication token found");
-  }
+  const token = await getAuthToken();
+  if (!token) throw new Error("No authentication token found");
+
   const { data, error } = await $fetch("/user/storybooks", {
-     headers: {
-        authorization: `Bearer ${token}`
-     }
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
-  if (error) {
-    throw new Error(error.message || "Failed to fetch user storybooks");
-  }
+
+  if (error) throw new Error(error.message || "Failed to fetch user storybooks");
 
   return transformStorybookData(data.data);
 }
 
-// Hook
+// React Query hook
 export function useUserStorybooks() {
   return useQuery({
     queryKey: ["userStorybooks"],
     queryFn: fetchUserStorybooks,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 }

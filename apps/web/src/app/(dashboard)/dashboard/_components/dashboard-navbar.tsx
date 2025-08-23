@@ -19,7 +19,10 @@ interface DashboardNavbarProps {
 
 export function DashboardNavbar({ user }: DashboardNavbarProps) {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  
+
+  // Map isSubscribed to plan
+  const plan:  "free" | "paid" = user.plan
+
   const planColors = {
     free: "bg-gray-100 text-gray-800 hover:bg-gray-200",
     paid: "bg-green-100 text-green-800 hover:bg-green-200"
@@ -36,13 +39,13 @@ export function DashboardNavbar({ user }: DashboardNavbarProps) {
         <Link href="/" className="text-primary text-xl font-serif font-bold">
           MyMagicalStory
         </Link>
-          
+
         <div className="flex space-x-6 font-sans text-neutral-700 text-sm">
           <Link href="/dashboard" className="hover:text-primary">Dashboard</Link>
           <Link href="/create" className="hover:text-primary">Create Story</Link>
           <Link href="#" className="hover:text-primary">Library</Link>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.avatar} alt={user.name} />
@@ -50,19 +53,19 @@ export function DashboardNavbar({ user }: DashboardNavbarProps) {
               <User className="h-4 w-4" />
             </AvatarFallback>
           </Avatar>
-          
+
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">{user.name}</span>
               <Badge 
                 variant="secondary" 
-                className={`text-xs ${planColors[user.plan]}`}
+                className={`text-xs ${planColors[plan]}`}
               >
-                {planLabels[user.plan]}
+                {planLabels[plan]}
               </Badge>
             </div>
           </div>
-          
+
           <div className="flex space-x-1">
             <Link href="/dashboard/account">
               <Button variant="ghost" size="sm">
@@ -76,7 +79,6 @@ export function DashboardNavbar({ user }: DashboardNavbarProps) {
         </div>
       </div>
 
-      {/* Logout Confirmation Dialog */}
       <LogoutConfirmation
         isOpen={showLogoutDialog}
         onClose={() => setShowLogoutDialog(false)}

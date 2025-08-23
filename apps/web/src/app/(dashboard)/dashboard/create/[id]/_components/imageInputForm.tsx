@@ -6,55 +6,57 @@ import { useParams } from "next/navigation";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { CustomFileInput } from "./file-input"; 
+import { CustomFileInput } from "./file-input";
 import { formSchema } from "@mymagicstory/shared/types";
 import { Loader2 } from "lucide-react";
-import { useCreateStoryBook } from "../_hooks/creatingStoryBook"; 
-import { compressImage } from "@/lib/compresor"; 
+import { useCreateStoryBook } from "../_hooks/creatingStoryBook";
+import { compressImage } from "@/lib/compresor";
 
 type FormData = z.infer<typeof formSchema>;
 
 interface ImageUploadFormProps {
-  onProjectCreated?: (projectId: string) => void;
-  onSetPreviewStatue: (ispreview: boolean) => void;
+  onSetPreviewStatue: (isPreview: boolean) => void;
+  onSetProjectId: (projectId: string) => void;
   onSuccess?: (result: { blob: Blob }) => void;
-
 }
 
-export default function ImageUploadForm({ onProjectCreated, onSuccess, onSetPreviewStatue }: ImageUploadFormProps) {
+export default function ImageUploadForm({
+  onSuccess,
+  onSetPreviewStatue,
+  onSetProjectId,
+}: ImageUploadFormProps) {
   const params = useParams();
-  const id = params.id as string;
-  
+  const templateId = params.id as string;
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      singleImage: undefined,
+      multipleImages: undefined,
     },
   });
 
   const { mutate, isPending, isSuccess } = useCreateStoryBook();
 
   async function onSubmit(data: FormData) {
-    if (!data.singleImage) return;
+  if (!data.multipleImages) return;
 
-    const compressedImage = await compressImage(data.singleImage);
+  const files = data.multipleImages instanceof FileList ? Array.from(data.multipleImages) : [data.multipleImages];
 
-    mutate({ data: { singleImage: compressedImage }, id }, {
-      onSuccess: (result) => {
-        if(result){
-          onSetPreviewStatue(result.isPreview)
-        }
-        // Generate blob URL and send it back to parent
-        if (result?.blob) {
-          console.log(result)
-          const url = URL.createObjectURL(result.blob);
-          if (onSuccess) onSuccess({ blob: result.blob });
-        }
+  // Compress images
+  const compressedFiles = await Promise.all(files.map((file) => compressImage(file)));
 
-        
-      }
-    });
-  }
+  // replace original files with compressed files
+  const compressedFormData = { ...data, multipleImages: compressedFiles };
+
+  // Send compressed images + id
+  await mutate({ data: compressedFormData, id: templateId }, {
+    onSuccess: (result) => {
+      onSetPreviewStatue(result.isPreview);
+      if (result.storybookId) onSetProjectId(result.storybookId);
+      if (result.blob && onSuccess) onSuccess({ blob: result.blob });
+    },
+  });
+}
 
   return (
     <Form {...form}>
@@ -66,11 +68,12 @@ export default function ImageUploadForm({ onProjectCreated, onSuccess, onSetPrev
 
         <CustomFileInput
           form={form}
-          name="singleImage"
-          label="Upload a Single Image"
-          description="Please upload one image in .jpg, .png, or .webp format (max 5MB)."
+          name="multipleImages"
+          label="Upload Images"
+          description="Please upload images in .jpg, .png, or .webp format (max 5MB each)."
+          multiple={true}
         />
-        
+
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? <Loader2 className="animate-spin" /> : "Submit"}
         </Button>

@@ -31,6 +31,10 @@ import {
   getPreviewsRoute,
   getPreviewsHandler,
 } from "./routes/pdf-preview.js";
+import { checkoutRoute, checkoutHandler } from "./routes/payment/stripeCheckout.js";
+import { buyBookHandler, buyBookRoute } from "./routes/payment/onetimePayment.js";
+import { verifyAndGenerateHandler, verifyAndGenerateRoute } from "./routes/payment/verifyandcontinuePdf.js";
+import { stripeWebhookHandler, stripeWebhookRoute } from "./routes/payment/webhooks.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -64,6 +68,9 @@ app.use("/post-data/*", supabaseAuth)
 app.use("/generate-previews", supabaseAuth)
 app.use("/previews/*", supabaseAuth)
 
+//stirpe authenticated
+app.use("/payment/*", supabaseAuth)
+
 //authentication
 app.openapi(CreateUserInDB, CreateUserInDBHandler )
 
@@ -77,6 +84,12 @@ app.openapi(getUserStorybooksRoute, getUserStorybooksHandler);
 // dashbaord story book generation place.
 app.openapi(previewRoute, previewHandler);
 app.openapi(getPreviewsRoute, getPreviewsHandler);
+
+//stripe
+app.openapi(checkoutRoute, checkoutHandler)
+app.openapi(buyBookRoute, buyBookHandler)
+app.openapi(verifyAndGenerateRoute, verifyAndGenerateHandler)
+app.openapi(stripeWebhookRoute, stripeWebhookHandler)
 
 
 
