@@ -34,6 +34,7 @@ import {
 import { checkoutRoute, checkoutHandler } from "./routes/payment/stripeCheckout.js";
 import { buyBookHandler, buyBookRoute } from "./routes/payment/onetimePayment.js";
 import { verifyAndGenerateHandler, verifyAndGenerateRoute } from "./routes/payment/verifyandcontinuePdf.js";
+import { stripeWebhookHandler, stripeWebhookRoute } from "./routes/payment/webhooks.js";
 const app = new OpenAPIHono();
 
 app.use(
@@ -88,6 +89,7 @@ app.openapi(getPreviewsRoute, getPreviewsHandler);
 app.openapi(checkoutRoute, checkoutHandler)
 app.openapi(buyBookRoute, buyBookHandler)
 app.openapi(verifyAndGenerateRoute, verifyAndGenerateHandler)
+app.openapi(stripeWebhookRoute, stripeWebhookHandler)
 
 
 

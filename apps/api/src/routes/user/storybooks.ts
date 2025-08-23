@@ -3,7 +3,7 @@ import { createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { prisma } from "../../db/index.js";
 
-// Response schema
+// Response schema including isSubscribed
 const userStorybooksResponseSchema = z.object({
   message: z.string(),
   data: z.object({
@@ -15,19 +15,22 @@ const userStorybooksResponseSchema = z.object({
       avatarUrl: z.string().nullable(),
       createdAt: z.string(),
       updatedAt: z.string(),
+      isSubscribed: z.boolean(),
     }),
-    storybooks: z.array(z.object({
-      id: z.string(),
-      title: z.string().nullable(),
-      status: z.enum(["DRAFT", "COMPLETED", "PURCHASED"]),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-      template: z.object({
+    storybooks: z.array(
+      z.object({
         id: z.string(),
-        title: z.string(),
-        coverImageUrl: z.string(),
-      }),
-    })),
+        title: z.string().nullable(),
+        status: z.enum(["DRAFT", "COMPLETED", "PURCHASED"]),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+        template: z.object({
+          id: z.string(),
+          title: z.string(),
+          coverImageUrl: z.string(),
+        }),
+      })
+    ),
   }),
 });
 
@@ -44,22 +47,15 @@ export const getUserStorybooksRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-    },
-    500: {
-      description: "Internal server error",
-    },
+    401: { description: "Unauthorized" },
+    500: { description: "Internal server error" },
   },
 });
 
 export const getUserStorybooksHandler = async (c: Context) => {
   try {
-    const user = c.get("user")
-    
-    if (!user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
+    const user = c.get("user");
+    if (!user) return c.json({ error: "Unauthorized" }, 401);
 
     // Fetch user details
     const userDetails = await prisma.user.findUnique({
@@ -72,12 +68,20 @@ export const getUserStorybooksHandler = async (c: Context) => {
         avatarUrl: true,
         createdAt: true,
         updatedAt: true,
+        subscriptions: {
+          where: {
+            status: "ACTIVE",
+            currentPeriodEnd: { gt: new Date() },
+          },
+          select: { id: true },
+        },
       },
     });
 
-    if (!userDetails) {
-      return c.json({ error: "User not found" }, 404);
-    }
+    if (!userDetails) return c.json({ error: "User not found" }, 404);
+
+    // Determine if user has an active subscription
+    const isSubscribed = userDetails.subscriptions.length > 0;
 
     // Fetch user's projects/storybooks with template details
     const projects = await prisma.project.findMany({
@@ -101,6 +105,7 @@ export const getUserStorybooksHandler = async (c: Context) => {
           ...userDetails,
           createdAt: userDetails.createdAt.toISOString(),
           updatedAt: userDetails.updatedAt.toISOString(),
+          isSubscribed,
         },
         storybooks: projects.map((project) => ({
           id: project.id,

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { SendDataType } from "@mymagicstory/shared/types";
+import { createClient } from "@supabase/supabase-js";
 
 interface CreateStoryBookParams {
   data: SendDataType;
@@ -14,7 +15,6 @@ interface CreateStoryBookResult {
 }
 
 const createStoryBook = async ({ data, id }: CreateStoryBookParams): Promise<CreateStoryBookResult> => {
-  const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -44,7 +44,6 @@ const createStoryBook = async ({ data, id }: CreateStoryBookParams): Promise<Cre
   }
 
   const json = await response.json();
-
   const blob = new Blob(
     [Uint8Array.from(atob(json.pdfBase64), (c) => c.charCodeAt(0))],
     { type: "application/pdf" }

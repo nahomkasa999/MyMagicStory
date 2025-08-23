@@ -56,7 +56,18 @@ export const createPostHandler = async (c: Context) => {
         currentPeriodEnd: { gt: new Date() },
       },
     });
-    console.log(subscription)
+
+    // Check if the user is subscribed and has quota available
+    const isSubscribedAndHasQuota = subscription && subscription.digitalBooksUsed < subscription.digitalBookQuota;
+    
+    // Determine if this is a preview generation
+    const isPreview = !isSubscribedAndHasQuota;
+
+    // If subscribed but quota is used up, return an error immediately
+    if (subscription && !isSubscribedAndHasQuota) {
+      return c.json({ error: "Subscription quota exceeded. Please upgrade your plan." }, 403);
+    }
+    
     const storyTemplate = await prisma.storyTemplate.findUnique({
       where: { id },
       select: { layoutJson: true, title: true },
@@ -75,7 +86,7 @@ export const createPostHandler = async (c: Context) => {
     // --- Use PDFPageGenerator with uploaded frontend images ---
     const pdfPageGenerator = new PDFPageGenerator(
       storyTemplate,
-      !!subscription,
+      !isPreview,
       project.id,
       images
     );
@@ -128,6 +139,7 @@ export const createPostHandler = async (c: Context) => {
       if (!error && data?.signedUrl) imageUrls.push(data.signedUrl);
     }
 
+    // Update project metadata
     await prisma.project.update({
       where: { id: project.id },
       data: {
@@ -138,12 +150,30 @@ export const createPostHandler = async (c: Context) => {
             fileSize: result.metadata.fileSize,
             dimensions: result.metadata.dimensions,
             generatedAt: new Date().toISOString(),
-            isPreview: !subscription,
+            isPreview: isPreview,
           },
         },
         updatedAt: new Date(),
       },
     });
+
+    // Increment quota only if a full book was generated
+    if (!isPreview) {
+      await prisma.project.update({
+        where: {id: project.id},
+        data: {
+          status: "COMPLETED"
+        }
+      })
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          digitalBooksUsed: {
+            increment: 1,
+          },
+        },
+      });
+    }
 
     return c.json({
       pdfBase64: result.pdfBuffer.toString("base64"),
@@ -152,7 +182,7 @@ export const createPostHandler = async (c: Context) => {
       pageCount: result.metadata.pageCount,
       fileSize: result.metadata.fileSize,
       projectId: project.id,
-      isPreview: !subscription,
+      isPreview: isPreview,
     });
   } catch (error) {
     console.error("Storybook generation failed:", error);

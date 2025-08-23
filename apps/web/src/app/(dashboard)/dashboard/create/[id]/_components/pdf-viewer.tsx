@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,17 @@ export default function PDFViewer({ projectId, isPreview, pdfPath, className = "
     isPreview: isPreview,
   });
   const [isProcessing, setIsProcessing] = useState(false);
-  const returnUrl = window.location.href; 
+  const returnUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  useEffect(() => {
+    setState((prev) => ({ ...prev, isPreview: isPreview }));
+  }, [isPreview]);
 
   const handleBuyNowClick = async () => {
-     if (!projectId) {
-    console.error("No project ID yet!");
-    return;
-  }
+    if (!projectId) {
+      console.error("No project ID yet!");
+      return;
+    }
     setIsProcessing(true);
     try {
       const res = await fetch("http://localhost:3001/payment/buy-book", {
@@ -95,19 +99,19 @@ export default function PDFViewer({ projectId, isPreview, pdfPath, className = "
 
   return (
     <div className={`relative border rounded-lg overflow-hidden bg-white ${className}`}>
-      {state.isLoading && !projectId && (
+      {state.isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
           <div className="flex items-center space-x-2">
-            {/* <Loader2 className="animate-spin h-6 w-6" /> */}
-            <span>You will get Pdf preview here</span>
+            <Loader2 className="animate-spin h-6 w-6" />
+            <span>Generating your PDF...</span>
           </div>
         </div>
       )}
-
+      
       <div className="max-h-[1200px] overflow-y-auto p-4">
         <div className="flex flex-col items-center">
           <Document
-            file={pdfPath || (projectId ? `/api/projects/${projectId}/pdf` : "/storybook.pdf")}
+            file={pdfPath}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading={
@@ -124,7 +128,6 @@ export default function PDFViewer({ projectId, isPreview, pdfPath, className = "
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+// src/routes/payment/buy-book.ts
 import { createRoute } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import Stripe from "stripe";
@@ -24,7 +25,7 @@ export const buyBookRoute = createRoute({
       },
     },
   },
-  responses: {
+  responses: {  
     200: { description: "Checkout session created" },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
@@ -61,7 +62,6 @@ export const buyBookHandler = async (c: Context) => {
       await prisma.user.update({ where: { id: dbUser.id }, data: { stripeCustomerId } });
     }
 
-    // This is where we redirect after payment
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -81,6 +81,11 @@ export const buyBookHandler = async (c: Context) => {
       ],
       success_url: `${body.data.returnUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&project_id=${body.data.projectId}`,
       cancel_url: `${body.data.returnUrl}/payment/cancel?project_id=${body.data.projectId}`,
+      // ADD THIS METADATA
+      metadata: {
+        projectId: body.data.projectId,
+        userId: user.id, // Also useful for the webhook to identify the user
+      },
     });
 
     return c.json({ url: session.url });
