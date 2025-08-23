@@ -1,9 +1,9 @@
+"use strict";
+
 import { createRoute } from "@hono/zod-openapi";
 import type { Context } from "hono";
-import { writeFile } from "fs/promises";
-import * as fs from "node:fs";
 import { prisma } from "../db/index.js";
-import fetch from "node-fetch";
+import fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { EnhancedPDFGenerator } from "../services/pdf/index.js";
 import { PDFPageGenerator } from "../services/pdf/generatePdfPages.js";
@@ -20,13 +20,16 @@ export const createPostRoute = createRoute({
   request: {
     body: {
       content: {
-        "application/json": {
+        "multipart/form-data": {
           schema: {
             type: "object",
             properties: {
-              imageUrls: { type: "array", items: { type: "string", format: "uri" } },
+              images: {
+                type: "array",
+                items: { type: "string", format: "binary" }, // files
+              },
             },
-            required: ["imageUrls"],
+            required: ["images"],
           },
         },
       },
@@ -38,16 +41,20 @@ export const createPostRoute = createRoute({
 export const createPostHandler = async (c: Context) => {
   const id = c.req.param("id");
   if (!id) return c.json({ error: "Template ID is required" }, 400);
+
   const user = c.get("user");
   if (!user) return c.json({ error: "User not authenticated" }, 401);
 
   try {
-    const { imageUrls }: { imageUrls: string[] } = await c.req.json();
-    if (!imageUrls || !imageUrls.length)
-      return c.json({ error: "No images provided" }, 400);
+    const files = await c.req.formData();
+    const images = files.getAll("images") as File[];
 
     const subscription = await prisma.subscription.findFirst({
-      where: { userId: user.id, status: "ACTIVE", currentPeriodEnd: { gt: new Date() } },
+      where: {
+        userId: user.id,
+        status: "ACTIVE",
+        currentPeriodEnd: { gt: new Date() },
+      },
     });
 
     const storyTemplate = await prisma.storyTemplate.findUnique({
@@ -65,8 +72,14 @@ export const createPostHandler = async (c: Context) => {
       },
     });
 
-    // --- Use PDFPageGenerator ---
-    const pdfPageGenerator = new PDFPageGenerator(storyTemplate, !!subscription, imageUrls);
+    // --- Use PDFPageGenerator with uploaded frontend images ---
+    const pdfPageGenerator = new PDFPageGenerator(
+      storyTemplate,
+      !!subscription,
+      project.id,
+      images
+    );
+
     const { layout, pages } = await pdfPageGenerator.generatePages();
 
     // --- Generate PDF ---
@@ -77,24 +90,43 @@ export const createPostHandler = async (c: Context) => {
       uploadToStorage: false,
     });
 
-    // --- Clean up temporary images ---
-    pages.forEach((page, idx) => {
+    // --- Clean up local image files if any ---
+    pages.forEach((page) => {
       if (page.imagePath) {
         try { fs.unlinkSync(page.imagePath); } catch {}
       }
     });
 
-    // --- Upload to Supabase ---
+    // --- Upload PDF to Supabase ---
     const pdfFileName = `projects/${project.id}/storybook.pdf`;
-    const { error: uploadError } = await supabase.storage
+    const { error: pdfUploadError } = await supabase.storage
       .from("storybook-pdfs")
-      .upload(pdfFileName, result.pdfBuffer, { contentType: "application/pdf", upsert: true });
-    if (uploadError) return c.json({ error: "Failed to store PDF" }, 500);
+      .upload(pdfFileName, result.pdfBuffer, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+    if (pdfUploadError) return c.json({ error: "Failed to store PDF" }, 500);
 
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from("storybook-pdfs")
-      .createSignedUrl(pdfFileName, 60 * 60);
-    if (signedUrlError) return c.json({ error: "Failed to generate download link" }, 500);
+    const { data: pdfSignedData, error: pdfSignedError } =
+      await supabase.storage
+        .from("storybook-pdfs")
+        .createSignedUrl(pdfFileName, 60 * 60);
+    if (pdfSignedError)
+      return c.json({ error: "Failed to generate download link" }, 500);
+
+    // --- Fetch signed URLs for all images in case some already existed ---
+    const uploadedImages = await prisma.uploadedImage.findMany({
+      where: { projectId: project.id },
+      select: { imageUrl: true },
+    });
+
+    const imageUrls: string[] = [];
+    for (const img of uploadedImages) {
+      const { data, error } = await supabase.storage
+        .from("storybook-images")
+        .createSignedUrl(img.imageUrl, 60 * 60);
+      if (!error && data?.signedUrl) imageUrls.push(data.signedUrl);
+    }
 
     await prisma.project.update({
       where: { id: project.id },
@@ -115,7 +147,8 @@ export const createPostHandler = async (c: Context) => {
 
     return c.json({
       pdfBase64: result.pdfBuffer.toString("base64"),
-      pdfSignedUrl: signedUrlData.signedUrl,
+      pdfSignedUrl: pdfSignedData.signedUrl,
+      imageUrls,
       pageCount: result.metadata.pageCount,
       fileSize: result.metadata.fileSize,
       projectId: project.id,
@@ -124,7 +157,10 @@ export const createPostHandler = async (c: Context) => {
   } catch (error) {
     console.error("Storybook generation failed:", error);
     return c.json(
-      { error: "Failed to generate storybook", message: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Failed to generate storybook",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       500
     );
   }

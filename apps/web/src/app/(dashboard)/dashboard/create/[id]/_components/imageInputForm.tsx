@@ -6,76 +6,57 @@ import { useParams } from "next/navigation";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { CustomFileInput } from "./file-input"; 
+import { CustomFileInput } from "./file-input";
 import { formSchema } from "@mymagicstory/shared/types";
 import { Loader2 } from "lucide-react";
-import { useCreateStoryBook } from "../_hooks/creatingStoryBook"; 
-import { compressImage } from "@/lib/compresor"; 
+import { useCreateStoryBook } from "../_hooks/creatingStoryBook";
+import { compressImage } from "@/lib/compresor";
 
 type FormData = z.infer<typeof formSchema>;
 
 interface ImageUploadFormProps {
-  onSetPreviewStatue: (ispreview: boolean) => void;
-  onSetProjectId:(projectId:string) => void;
+  onSetPreviewStatue: (isPreview: boolean) => void;
+  onSetProjectId: (projectId: string) => void;
   onSuccess?: (result: { blob: Blob }) => void;
-}
-
-// Helper to upload a single file to Cloudinary
-async function uploadToCloudinary(file: File) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-    method: "POST",
-    body: formData,
-  });
-
-  const data = await res.json();
-  return data.secure_url as string;
 }
 
 export default function ImageUploadForm({
   onSuccess,
   onSetPreviewStatue,
-  onSetProjectId
+  onSetProjectId,
 }: ImageUploadFormProps) {
   const params = useParams();
-  const id = params.id as string;
-  
+  const templateId = params.id as string;
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       multipleImages: undefined,
-       // can now hold multiple files
     },
   });
 
   const { mutate, isPending, isSuccess } = useCreateStoryBook();
 
   async function onSubmit(data: FormData) {
-    if (!data.multipleImages) return;
+  if (!data.multipleImages) return;
 
-    const files = data.multipleImages instanceof FileList ? Array.from(data.multipleImages) : [data.multipleImages];
+  const files = data.multipleImages instanceof FileList ? Array.from(data.multipleImages) : [data.multipleImages];
 
-    // Compress all images first
-    const compressedFiles = await Promise.all(files.map(file => compressImage(file)));
+  // Compress images
+  const compressedFiles = await Promise.all(files.map((file) => compressImage(file)));
 
-    // Upload all compressed images to Cloudinary
-    const cloudinaryUrls = await Promise.all(compressedFiles.map(file => uploadToCloudinary(file)));
+  // replace original files with compressed files
+  const compressedFormData = { ...data, multipleImages: compressedFiles };
 
-    //Send the URLs to your backend in a single request
-    await mutate({ data: { imageUrls: cloudinaryUrls }, id }, {
-      onSuccess: (result) => {
-        console.log(result)
-        onSetPreviewStatue(result.isPreview);
-        result.storybookId && onSetProjectId(result.storybookId)
-        if (result.blob && onSuccess) {
-          onSuccess({ blob: result.blob });
-        }
-      },
-    });
-  }
+  // Send compressed images + id
+  await mutate({ data: compressedFormData, id: templateId }, {
+    onSuccess: (result) => {
+      onSetPreviewStatue(result.isPreview);
+      if (result.storybookId) onSetProjectId(result.storybookId);
+      if (result.blob && onSuccess) onSuccess({ blob: result.blob });
+    },
+  });
+}
 
   return (
     <Form {...form}>
@@ -90,9 +71,9 @@ export default function ImageUploadForm({
           name="multipleImages"
           label="Upload Images"
           description="Please upload images in .jpg, .png, or .webp format (max 5MB each)."
-          multiple={true} // allows multiple files
+          multiple={true}
         />
-        
+
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? <Loader2 className="animate-spin" /> : "Submit"}
         </Button>

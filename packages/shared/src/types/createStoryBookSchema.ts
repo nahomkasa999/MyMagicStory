@@ -30,10 +30,11 @@ export const multipleImagesSchema = z.object({
       "Only .jpg, .jpeg, .png and .webp formats are supported."
     ),
 });
-
-
-
 export const formSchema = z.object({
-  // singleImage: singleImageSchema.shape.singleImage,
   multipleImages: multipleImagesSchema.shape.multipleImages,
 });
+
+export const sendDataSchema = z.object({
+  multipleImages: z.array(z.instanceof(File)),
+});
+export type SendDataType = z.infer<typeof sendDataSchema>;
