@@ -1,3 +1,4 @@
+// app/dashboard/_components/dashboard-layout.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { StorybooksGridWithPreviews } from "./storybooks-grid-with-previews";
 
 import type { FrontendUser, FrontendStorybook } from "../../../../../types/dashboard-types";
 import type { StorybookWithPreviews } from "../../../../../types/preview-types";
+import React from "react"; // 1. Import React to use React.ReactNode
 
 type User = FrontendUser;
 type Storybook = FrontendStorybook;
@@ -14,18 +16,19 @@ type Storybook = FrontendStorybook;
 interface DashboardLayoutProps {
   user: User;
   storybooks: Storybook[];
+  children?: React.ReactNode; // 2. Add children prop as optional
 }
 
 // Transform FrontendStorybook to StorybookWithPreviews
 function transformToStorybookWithPreviews(storybooks: Storybook[]): StorybookWithPreviews[] {
   return storybooks.map(storybook => ({
     ...storybook,
-    hasWebPPreviews: false, // Will be determined by the preview hooks
+    hasWebPPreviews: false,
     previews: undefined,
   }));
 }
 
-export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
+export function DashboardLayout({ user, storybooks, children }: DashboardLayoutProps) { // 3. Destructure the children prop
   const router = useRouter();
   
   const storybooksWithPreviews = transformToStorybookWithPreviews(storybooks);
@@ -61,8 +64,9 @@ export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
         </Button>
       </div>
       
-      {/* Storybooks Grid */}
-      {storybooksWithPreviews.length === 0 ? (
+      {/* Storybooks Grid (Conditionally rendered) */}
+      {/* 4. Render the children prop if it exists, otherwise render the grid */}
+      {children || (storybooksWithPreviews.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="rounded-full bg-muted p-3 mb-4">
             <Plus className="h-6 w-6 text-muted-foreground" />
@@ -85,7 +89,7 @@ export function DashboardLayout({ user, storybooks }: DashboardLayoutProps) {
           onViewStorybook={handleViewStorybook}
           onEditStorybook={handleEditStorybook}
         />
-      )}
+      ))}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useVerifierGenerator } from "../_hooks/fetchbackend";
+import { useVerifierGenerator } from "../../_hooks/fetchbackend";
 import { useSession } from "@/app/hooks/session";
-import PDFViewer from "../../_components/pdf-viewer";
+import PDFViewer from "../../../create/[id]/_components/pdf-viewer";
 
 export default function SuccessPage() {
   const searchParams = useSearchParams();
@@ -38,14 +38,6 @@ export default function SuccessPage() {
         Payment Successful 🎉
       </h1>
       <p className="mt-4">Your storybook has been generated.</p>
-      <PDFViewer
-        projectId={projectId || undefined}
-        isPreview={false}
-        pdfPath={
-          data.downloadUrl || (!projectId ? "/storybook.pdf" : undefined)
-        }
-        className="max-w-4xl mx-auto"
-      />
       {data?.downloadUrl ? (
         <a
           href={data.downloadUrl}
@@ -63,6 +55,15 @@ export default function SuccessPage() {
           Go to Project
         </button>
       )}
+      <PDFViewer
+        projectId={projectId || undefined}
+        isPreview={false}
+        pdfPath={
+          data.downloadUrl || (!projectId ? "/storybook.pdf" : undefined)
+        }
+        className="max-w-4xl mx-auto"
+      />
+      
     </div>
   );
 }

@@ -1,3 +1,4 @@
+// app/dashboard/_components/storybook-preview-card.tsx
 "use client";
 
 import { useState } from "react";
@@ -15,9 +16,11 @@ import { PreviewImageComponent } from "./preview-image";
 import { useEnsurePreviews } from "../_hooks/usePreviews";
 import { cn } from "@/lib/utils";
 import type { StorybookWithPreviews } from "../../../../../types/preview-types";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 interface StorybookPreviewCardProps {
   storybook: StorybookWithPreviews;
+  // We'll remove the onView prop and handle navigation directly
   onView?: (storybook: StorybookWithPreviews) => void;
   onEdit?: (storybook: StorybookWithPreviews) => void;
 }
@@ -27,6 +30,7 @@ export function StorybookPreviewCard({
   onView,
   onEdit,
 }: StorybookPreviewCardProps) {
+  const router = useRouter(); // Initialize router
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const {
@@ -48,7 +52,6 @@ export function StorybookPreviewCard({
     processing: "Processing"
   };
 
-  // Get the first preview image or fallback to cover image
   const previewImage = previews?.previews?.[0];
   const displayImage = previewImage || (storybook.coverImage ? {
     url: storybook.coverImage,
@@ -61,9 +64,11 @@ export function StorybookPreviewCard({
     e.stopPropagation();
     generatePreviews();
   };
-
+  
+  // This is the new navigation handler
   const handleView = () => {
-    onView?.(storybook);
+    // Navigate to the project page using the storybook ID
+    router.push(`/dashboard/project/${storybook.id}`);
   };
 
   const handleEdit = () => {
@@ -72,7 +77,6 @@ export function StorybookPreviewCard({
 
   return (
     <Card className="group hover:shadow-sm transition-shadow duration-200">
-      {/* Header with Title, Status, and Three-dot Menu */}
       <CardHeader className="p-2 pb-1">
         <div className="flex items-start justify-between gap-1">
           <div className="flex-1 min-w-0">
@@ -94,37 +98,13 @@ export function StorybookPreviewCard({
               )}
             </div>
           </div>
-          
-          {/* Three-dot Dropdown Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <MoreHorizontal className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem className="text-xs" onClick={handleView}>
-                <Eye className="h-3 w-3 mr-2" />
-                View
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={handleEdit}>
-                <Edit className="h-3 w-3 mr-2" />
-                Edit
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </CardHeader>
       
-      {/* Content with Image */}
       <CardContent className="p-2 pt-0">
         <div 
           className="aspect-[4/3] bg-muted rounded-sm overflow-hidden cursor-pointer"
-          onClick={handleView}
+          onClick={handleView} // This now triggers the new navigation
         >
           {displayImage ? (
             <div className="relative w-full h-full">
@@ -136,14 +116,12 @@ export function StorybookPreviewCard({
                 onLoad={() => setImageLoaded(true)}
               />
               
-              {/* Preview indicator overlay */}
               {previews && previews.previews.length > 1 && (
                 <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                   {previews.previews.length} pages
                 </div>
               )}
               
-              {/* Loading/generating overlay */}
               {(isLoading || isGenerating) && (
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                   <div className="bg-white/90 rounded-full p-2">

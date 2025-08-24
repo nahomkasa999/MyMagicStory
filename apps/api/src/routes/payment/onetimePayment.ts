@@ -79,8 +79,8 @@ export const buyBookHandler = async (c: Context) => {
           quantity: 1,
         },
       ],
-      success_url: `${body.data.returnUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&project_id=${body.data.projectId}`,
-      cancel_url: `${body.data.returnUrl}/payment/cancel?project_id=${body.data.projectId}`,
+      success_url: `http://localhost:3000/dashboard/payment/success?session_id={CHECKOUT_SESSION_ID}&project_id=${body.data.projectId}`,
+      cancel_url: `https://localhost:3000/dashboard/payment/cancel?project_id=${body.data.projectId}`,
       // ADD THIS METADATA
       metadata: {
         projectId: body.data.projectId,
