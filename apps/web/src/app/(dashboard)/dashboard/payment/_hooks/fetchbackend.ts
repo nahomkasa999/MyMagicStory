@@ -31,7 +31,6 @@ const verifyAndgenerateHandler = async (sessionId: string, projectId: string ) =
       if (!res.ok) throw new Error("Payment verification failed")
       const result = await res.json()
       if (!result.success) throw new Error("Payment not confirmed")
-      console.log(result)
       return result
     }
 

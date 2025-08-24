@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase/supabaseClient";
 import { type FrontendUser, type FrontendStorybook } from "../../../../../types/dashboard-types";
 import { z } from "zod";
 
-// Backend API response schema
+// Backend API response schema with the corrected 'previewUrl'
 export const apiUserStorybooksResponseSchema = z.object({
   message: z.string(),
   data: z.object({
@@ -32,6 +32,7 @@ export const apiUserStorybooksResponseSchema = z.object({
           title: z.string(),
           coverImageUrl: z.string(),
         }),
+        previewUrl: z.string().nullable(), // This property is returned by the backend
       })
     ),
   }),
@@ -57,7 +58,7 @@ async function getAuthToken() {
 }
 
 // Transform backend data to frontend format
-function transformStorybookData(backendData: any): {
+function transformStorybookData(backendData: z.infer<typeof apiUserStorybooksResponseSchema>['data']): {
   user: FrontendUser;
   storybooks: FrontendStorybook[];
 } {
@@ -65,14 +66,14 @@ function transformStorybookData(backendData: any): {
     name: backendData.user.name || "Unknown User",
     email: backendData.user.email,
     avatar: backendData.user.avatarUrl || undefined,
-    plan: backendData.user.isSubscribed ? "paid" : "free", // now uses isSubscribed
+    plan: backendData.user.isSubscribed ? "paid" : "free",
   };
 
-  const storybooks: FrontendStorybook[] = backendData.storybooks.map((storybook: any) => ({
+  const storybooks: FrontendStorybook[] = backendData.storybooks.map((storybook) => ({
     id: storybook.id,
     title: storybook.title || storybook.template.title,
     description: `A magical storybook based on ${storybook.template.title}`,
-    coverImage: storybook.template.coverImageUrl || undefined,
+    coverImage: storybook.previewUrl || storybook.template.coverImageUrl || undefined,
     createdAt: storybook.createdAt,
     status: mapStatus(storybook.status),
     pageCount: calculatePageCount(storybook.status),
@@ -99,9 +100,9 @@ function calculatePageCount(status: string): number {
   switch (status) {
     case "COMPLETED":
     case "PURCHASED":
-      return Math.floor(Math.random() * 15) + 8; // 8-22 pages
+      return Math.floor(Math.random() * 15) + 8;
     case "DRAFT":
-      return Math.floor(Math.random() * 8) + 1; // 1-8 pages
+      return Math.floor(Math.random() * 8) + 1;
     default:
       return 0;
   }
@@ -120,6 +121,7 @@ async function fetchUserStorybooks() {
 
   if (error) throw new Error(error.message || "Failed to fetch user storybooks");
 
+  // The 'data' object has a 'data' key which contains the actual payload
   return transformStorybookData(data.data);
 }
 
