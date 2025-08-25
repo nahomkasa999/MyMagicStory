@@ -66,6 +66,13 @@ app.onError((err, c) => {
 
 // All template routes are now authenticated
 app.use("/templates/*", supabaseAuth);
+app.use("/template", supabaseAuth)
+app.use("/user/storybooks", supabaseAuth)
+app.use("/user/templates", supabaseAuth)
+app.use("/post-data/*", supabaseAuth)
+app.use("/project/*", supabaseAuth)
+//stirpe authenticated
+app.use("/payment/*", supabaseAuth)
 
 //authentication
 app.openapi(CreateUserInDB, CreateUserInDBHandler );

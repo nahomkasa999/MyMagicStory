@@ -58,6 +58,7 @@ export const createPostHandler = async (c: Context) => {
       },
     });
 
+
     const isSubscribedAndHasQuota = subscription && subscription.digitalBooksUsed < subscription.digitalBookQuota;
     
     const isPreview = !isSubscribedAndHasQuota;
@@ -80,6 +81,7 @@ export const createPostHandler = async (c: Context) => {
         status: "DRAFT",
       },
     });
+        console.log("hellow world", project, storyTemplate, storyTemplate.layoutJson)
 
     const pdfPageGenerator = new PDFPageGenerator(
       storyTemplate,
