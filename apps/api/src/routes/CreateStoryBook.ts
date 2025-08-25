@@ -91,7 +91,7 @@ export const createPostHandler = async (c: Context) => {
     );
 
     const { layout, pages } = await pdfPageGenerator.generatePages();
-
+    console.log(layout)
     const pdfGenerator = new EnhancedPDFGenerator(supabase);
     const result = await pdfGenerator.generatePDF(layout, pages, {
       outputFormat: "print",
