@@ -1,135 +1,162 @@
-# Turborepo starter
+# My Magic Story
 
-This Turborepo starter is maintained by the Turborepo core team.
+My Magic Story is a web application that allows users to create, customize, and purchase personalized storybooks. It features a user-friendly interface for designing books, a secure payment system, and an administrative dashboard for managing content and users.
 
-## Using this example
+## Features
 
-Run the following command:
+-   **User Authentication:** Secure sign-up and sign-in functionality.
+-   **Storybook Creation:** A step-by-step process to create personalized storybooks with custom text and images.
+-   **Template Selection:** A variety of templates for users to choose from.
+-   **PDF Generation:** On-the-fly PDF generation for storybook previews and final products.
+-   **Payment Integration:** Secure payment processing using Stripe.
+-   **Admin Dashboard:** A comprehensive dashboard for administrators to manage templates, users, and content.
 
-```sh
-npx create-turbo@latest
+## Folder Structure
+
+The project is a monorepo managed by Turborepo, containing the frontend and backend applications.
+
+```
+.
+├── apps/
+│   ├── api/
+│   │   ├── prisma/
+│   │   │   ├── migrations/
+│   │   │   └── schema.prisma  # Database schema for Prisma ORM.
+│   │   ├── src/
+│   │   │   ├── db/
+│   │   │   │   └── index.ts  # Database client initialization.
+│   │   │   ├── middleware/
+│   │   │   │   └── auth.ts  # Authentication middleware.
+│   │   │   ├── routes/
+│   │   │   │   ├── auth.ts  # Authentication routes.
+│   │   │   │   ├── CreateStoryBook.ts  # Route for creating storybooks.
+│   │   │   │   ├── payment/  # Stripe payment routes.
+│   │   │   │   ├── projectspdf.ts # Routes for handling project PDFs
+│   │   │   │   ├── secure-image-url.ts # Routes for generating secure image URLs
+│   │   │   │   ├── template.ts # Routes for managing templates
+│   │   │   │   └── user.ts # User-related routes
+│   │   │   ├── services/
+│   │   │   │   ├── pdf/  # PDF generation services.
+│   │   │   │   └── utility.ts # Utility functions
+│   │   │   ├── supabase/
+│   │   │   │   └── client.ts  # Supabase client initialization.
+│   │   │   ├── app.ts  # Main application file (Hono).
+│   │   │   ├── frontend.ts # Frontend-specific API routes
+│   │   │   └── index.ts  # Server entry point.
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── web/
+│       ├── public/  # Static assets.
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── (auth)/  # Authentication pages (signin, signup).
+│       │   │   ├── (dashboard)/  # User and admin dashboard pages.
+│       │   │   ├── (landing)/  # Landing page.
+│       │   │   ├── layout.tsx  # Root layout.
+│       │   │   └── page.tsx  # Root page.
+│       │   ├── components/
+│       │   │   └── ui/  # UI components (buttons, cards, etc.).
+│       │   ├── hooks/  # Custom React hooks.
+│       │   ├── lib/
+│       │   │   ├── supabase/
+│       │   │   │   └── supabaseClient.ts  # Supabase client for the frontend.
+│       │   │   └── utils.ts  # Utility functions.
+│       │   └── providers/  # React context providers.
+│       ├── middleware.ts  # Next.js middleware.
+│       ├── next.config.ts  # Next.js configuration.
+│       ├── package.json
+│       └── tsconfig.json
+├── packages/
+│   ├── eslint-config/  # Shared ESLint configurations.
+│   ├── shared/  # Shared types and schemas between apps.
+│   └── typescript-config/  # Shared TypeScript configurations.
+├── prompts/ # Prompts for AI models
+├── .gitignore
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── README.md
+└── turbo.json
 ```
 
-## What's inside?
+## Supabase Setup
 
-This Turborepo includes the following packages/apps:
+This project uses Supabase for database and storage.
 
-### Apps and Packages
+### Storage Bucket
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+You need to create a Supabase storage bucket to handle file uploads.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+1.  Go to your Supabase project dashboard.
+2.  Navigate to the "Storage" section.
+3.  Click "New bucket".
+4.  Enter the bucket name: `storybook-pdfs`
+5.  Set the bucket to be **public**.
+6.  Create the bucket.
 
-### Utilities
+you also need privet buckts called storybook-previews, storybook-images, storybook-finals
 
-This Turborepo has some additional tools already setup for you:
+## Environment Variables
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+You need to set up environment variables for both the frontend and backend.
 
-### Build
+### Backend (`apps/api/.env`)
+
+```
+DATABASE_URL="your-supabase-database-url"
+DIRECT_URL="your-supabase-direct-url"
+SUPABASE_URL="your-supabase-project-url"
+SUPABASE_ANON_KEY="your-supabase-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
+STRIPE_SECRET_KEY="your-stripe-secret-key"
+STRIPE_WEBHOOK_SECRET="your-stripe-webhook-secret"
+GEMINI_API_KEY="your-google-gemini-api-key"
+REPLICATE_API_TOKEN="your-replicate-api-token"
+CLOUDINARY_URL="your-cloudinary-url"
+```
+
+### Frontend (`apps/web/.env.local`)
+
+```
+NEXT_PUBLIC_SUPABASE_URL="your-supabase-project-url"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+NEXT_PUBLIC_API_URL="http://localhost:3001"
+```
+
+## Getting Started
+
+### Prerequisites
+
+-   [Node.js](https://nodejs.org/) (v18 or later)
+-   [pnpm](https://pnpm.io/)
+
+### Installation
+
+1.  Clone the repository:
+    ```sh
+    git clone git@github.com:walidboulanouar/MyMagicalStory.git
+    cd my-magic-story
+    ```
+
+2.  Install dependencies:
+    ```sh
+    pnpm install
+    ```
+
+### Running the Development Servers
+
+To start the development servers for both the frontend and backend, run the following command from the root of the project:
+
+```sh
+pnpm dev
+```
+
+-   The frontend will be available at `http://localhost:3000`.
+-   The backend will be available at `http://localhost:3001`.
+
+### Building the Project
 
 To build all apps and packages, run the following command:
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+```sh
+pnpm build
