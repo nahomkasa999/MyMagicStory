@@ -1,6 +1,7 @@
 // src/services/pdf/generatePdfPages.ts
 import type { LayoutJSON, PageRenderData, LegacyPage } from "./types.js";
 import { layoutJsonSchema, legacyLayoutJsonSchema } from "./types.js";
+import { templateFormSchema, pageSchema } from "@mymagicstory/shared/types";
 import { writeFile } from "fs/promises";
 import pMap from "p-map";
 import Replicate from "replicate";
@@ -28,22 +29,107 @@ export class PDFPageGenerator {
     projectId: string,
     frontendImages?: File[]
   ) {
+    console.log("PDFPageGenerator: Starting constructor.");
     this.storyTemplate = storyTemplate;
     this.subscription = isFullGeneration;
     this.projectId = projectId;
     this.frontendImages = frontendImages;
 
     try {
-      this.layout = layoutJsonSchema.parse(storyTemplate.layoutJson);
-    } catch {
-      const legacyLayout = legacyLayoutJsonSchema.parse(
-        storyTemplate.layoutJson
-      );
-      this.layout = this.convertLegacyLayout(legacyLayout);
+      console.log("Data being validated:", JSON.stringify(storyTemplate.layoutJson, null, 2));
+      this.layout = this.convertLayout(storyTemplate.layoutJson);
+      console.log("PDFPageGenerator: Data successfully converted.");
+    } catch (error) {
+      console.error("PDFPageGenerator: Failed to initialize. Layout conversion failed.", error);
+      throw error; // Re-throw to be caught by the main handler
     }
   }
 
+   private convertLayout(inputLayout: any): LayoutJSON {
+    // Attempt 1: Try to parse as the primary, modern layout (layoutJsonSchema)
+    try {
+      console.log("Attempting to parse as modern LayoutJSON...");
+      const parsedLayout = layoutJsonSchema.parse(inputLayout);
+      console.log("Success! Parsed as modern LayoutJSON.");
+      return parsedLayout;
+    } catch (e) {
+      console.log("Failed to parse as modern LayoutJSON. Moving to next attempt.");
+    }
+
+    // Attempt 2: Try to parse as the frontend templateFormSchema and convert it
+    try {
+      console.log("Attempting to parse as templateFormSchema...");
+      const templateLayout = templateFormSchema.parse(inputLayout);
+      console.log("Success! Parsed as templateFormSchema. Converting...");
+      return {
+        title: templateLayout.title,
+        subtitle: undefined,
+        pages: templateLayout.pages.map((page) => {
+          if (page.text && !page.imagePrompt) {
+            return {
+              type: "text" as const,
+              content: page.text,
+              linkToPrevious: false,
+              style: {
+                fontSize: 18,
+                fontFamily: "Helvetica",
+                color: "#000000",
+                alignment: "center" as const,
+                margin: { top: 50, bottom: 50, left: 50, right: 50 },
+              },
+            };
+          } else if (page.imagePrompt) {
+            return {
+              type: "image" as const,
+              content: page.imagePrompt,
+              linkToPrevious: false,
+              style: {
+                fit: "cover" as const,
+                position: { x: 0, y: 0 },
+                size: {},
+              },
+            };
+          } else {
+            // Fallback for pages with no text or imagePrompt
+            return {
+              type: "text" as const,
+              content: "Page content missing.",
+              linkToPrevious: false,
+              style: {
+                fontSize: 18,
+                fontFamily: "Helvetica",
+                color: "#000000",
+                alignment: "center" as const,
+                margin: { top: 50, bottom: 50, left: 50, right: 50 },
+              },
+            };
+          }
+        }),
+        settings: {
+          pageSize: { width: 595.28, height: 841.89 },
+          bleed: 9,
+          colorProfile: "CMYK" as const,
+          resolution: 300,
+        },
+      };
+    } catch (e) {
+      console.log("Failed to parse as templateFormSchema. Moving to next attempt.");
+    }
+
+    // Attempt 3: Fallback to the original legacyLayoutJsonSchema
+    try {
+      console.log("Attempting to parse as legacyLayoutJsonSchema...");
+      const legacyLayout = legacyLayoutJsonSchema.parse(inputLayout);
+      console.log("Success! Parsed as legacyLayoutJsonSchema. Converting...");
+      return this.convertLegacyLayout(legacyLayout);
+    } catch (e) {
+      console.error("Failed to parse as any known schema. Throwing error.");
+      throw new Error("Invalid story template data. It does not match any known schema.");
+    }
+  }
+  
   private convertLegacyLayout(legacyLayout: any): LayoutJSON {
+    console.log("Converting legacy layout...");
     return {
       title: legacyLayout.title,
       subtitle: undefined,
@@ -82,7 +168,7 @@ export class PDFPageGenerator {
       },
     };
   }
-
+  
   private async prepareImageUrls(): Promise<void> {
     if (this.frontendImages?.length) {
       for (let i = 0; i < this.frontendImages.length; i++) {

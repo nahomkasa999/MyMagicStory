@@ -1,24 +1,17 @@
-import { AdminNavbar } from "./_components/admin-navbar";
+import React from 'react';
+import { SidebarProvider } from "@/components/ui/sidebar";
+import AdminDashboardShell from "./_Components/admin-dashboard-shell"; // New wrapper component
+import { AppSidebar } from "./_Components/admin-sidebar";
 
-interface AdminDashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-const AdminDashboardLayout = ({ children }: AdminDashboardLayoutProps) => {
-  const sampleUser = {
-    name: "Admin User",
-    email: "admin@example.com",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-  };
-
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <AdminNavbar user={sampleUser} />
-      <main className="flex-grow container mx-auto px-3 sm:px-4 lg:px-6 py-4">
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <AdminDashboardShell>
+        <AppSidebar />
+        <main>
+          {children}
+        </main>
+      </AdminDashboardShell>
+    </SidebarProvider>
   );
-};
-
-export default AdminDashboardLayout;
+}

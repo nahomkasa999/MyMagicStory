@@ -1,80 +1,78 @@
-import React from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../../../components/ui/accordion";
+'use client'
 
-type FaqItem = {
-  question: string;
-  answer: string;
-};
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { DynamicIcon, type IconName } from 'lucide-react/dynamic'
 
-type Props = {
-  heading: string;
-  faqItems: FaqItem[];
-};
+type ReviewItem = {
+  id: string
+  icon: IconName
+  question: string
+  answer: string
+}
 
-export type FaqSectionProps = React.ComponentPropsWithoutRef<"section"> &
-  Partial<Props>;
+export default function ReviewSectionFAQ() {
+  const reviewItems: ReviewItem[] = [
+    {
+      id: 'item-1',
+      icon: 'star',
+      question: 'The story was so beautiful and my daughter loved it. Can I create more books?',
+      answer: 'Absolutely! You can create unlimited personalized storybooks, choosing different characters and storylines for each one.',
+    },
+    {
+      id: 'item-2',
+      icon: 'star',
+      question: 'How high is the quality of illustrations?',
+      answer: 'Our AI generates stunning illustrations based on the details you provide, ensuring each book looks professional and magical.',
+    },
+    {
+      id: 'item-3',
+      icon: 'star',
+      question: 'Is this a good gift for children?',
+      answer: 'Yes, personalized storybooks make unique and thoughtful gifts. Children love seeing themselves as the main character.',
+    },
+  ]
 
-export const FaqSection = (props: FaqSectionProps) => {
-  const { heading, faqItems } = {
-    ...FaqSectionDefaults,
-    ...props,
-  };
   return (
-    <section id="faq" className="py-12 w-[50%] m-auto md:py-20">
-      <div className="container mx-auto px-4 w-[50%] md:w-10/12">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800">{heading}</h2>
-        </div>
-        <Accordion type="single" collapsible className="w-full">
-          {faqItems.map((item, index) => (
-            <AccordionItem value={`item-${index}`} key={index}>
-              <AccordionTrigger>{item.question}</AccordionTrigger>
-              <AccordionContent>{item.answer}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-        <div className="text-center mt-8">
-          <Button variant="link">View all frequently asked questions <ArrowRight className="ml-2 h-4 w-4" /></Button>
+    <section className="w-[70%] m-auto px-[5%] py-16">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex flex-col gap-10 md:flex-row md:gap-16">
+          <div className="md:w-1/3">
+            <div className="sticky top-20">
+              <h2 className="mt-4 text-4xl font-serif font-bold leading-tight">
+                What Our Magical Customers Say
+              </h2>
+              <p className="text-muted-foreground mt-4">
+                Read stories from other parents and creators who made magical books for their children.
+              </p>
+            </div>
+          </div>
+          <div className="md:w-2/3">
+            <Accordion type="single" collapsible className="w-full space-y-2">
+              {reviewItems.map((item) => (
+                <AccordionItem
+                  key={item.id}
+                  value={item.id}
+                  className="bg-background shadow-xs rounded-lg border px-4 last:border-b"
+                >
+                  <AccordionTrigger className="cursor-pointer items-center py-5 hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-6">
+                        <DynamicIcon name={item.icon} className="m-auto size-4 text-foreground" />
+                      </div>
+                      <span className="text-base text-foreground">{item.question}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-5">
+                    <div className="px-9">
+                      <p className="text-base text-foreground">{item.answer}</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
         </div>
       </div>
     </section>
-  );
-};
-
-import { Button } from "../../../components/ui/button";
-import { ArrowRight } from "lucide-react";
-
-export const FaqSectionDefaults: Props = {
-  heading: "Frequently Asked Questions",
-  faqItems: [
-    {
-      question: "How do I create a personalized children's book?",
-      answer: "You can create a personalized children's book by using our easy-to-use online editor. Simply upload your photos, choose a story theme, and customize the details to create a unique book for your child.",
-    },
-    {
-      question: "What exactly do I receive when I create a book?",
-      answer: "You will receive a beautifully illustrated, professionally printed hardcover book with a personalized story and characters based on the photos you provide.",
-    },
-    {
-      question: "How much does a personalized children's book cost?",
-      answer: "The price of a personalized children's book varies depending on the number of pages and other customization options. You can see the final price during the checkout process.",
-    },
-    {
-        question: "Can I see a sample of the book?",
-        answer: "Yes, you can view a digital preview of your book before you place your order. This allows you to see exactly how your personalized story will look.",
-    },
-    {
-        question: "What if I don't like the children's book?",
-        answer: "We offer a satisfaction guarantee. If you are not happy with your book for any reason, please contact our customer support team, and we will be happy to assist you.",
-    },
-    {
-        question: "When can I order a hardcover and have it delivered?",
-        answer: "Hardcover books are available for order at any time. Delivery times may vary depending on your location, but we strive to deliver your personalized book as quickly as possible.",
-    },
-  ],
-};
+  )
+}

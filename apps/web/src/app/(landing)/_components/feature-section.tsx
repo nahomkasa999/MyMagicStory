@@ -1,12 +1,12 @@
-import Image from "next/image";
-import { Button } from "../../../components/ui/button";
+import Image from "next/image"
+import { Button } from "../../../components/ui/button"
 
 const features: {
-  number: number;
-  header: string;
-  description: string;
-  image: string;
-  layout: "text-left" | "image-left";
+  number: number
+  header: string
+  description: string
+  image: string
+  layout: "text-left" | "image-left"
 }[] = [
   {
     number: 1,
@@ -28,11 +28,11 @@ const features: {
     number: 3,
     header: "Receive Your Book in Various Formats",
     description:
-      "Receive the eBook for $7.99 immediately. Do you also want a physical copy? Then choose a hardcover for $34.99 afterwards.",
+      "Not subscribed, Receive the eBook for $29.95 immediately. Do you also want a physical copy? Then choose a hardcover for $34.99 afterwards.",
     image: "https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg",
     layout: "text-left",
   },
-];
+]
 
 function Feature({
   number,
@@ -41,23 +41,23 @@ function Feature({
   image,
   layout,
 }: {
-  number: number;
-  header: string;
-  description: string;
-  image: string;
-  layout: "text-left" | "image-left";
+  number: number
+  header: string
+  description: string
+  image: string
+  layout: "text-left" | "image-left"
 }) {
   const textContent = (
-    <div className="flex flex-col justify-center">
+    <div className="flex flex-col justify-center text-foreground">
       <div className="flex items-center gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary p-3 text-background">
           {number}
         </div>
         <h2 className="text-xl font-bold">{header}</h2>
       </div>
-      <p className="mt-4 text-lg">{description}</p>
+      <p className="mt-4 text-muted-foreground">{description}</p>
     </div>
-  );
+  )
 
   const imageContent = (
     <div className="flex items-center justify-center">
@@ -66,10 +66,10 @@ function Feature({
         alt={header}
         width={300}
         height={300}
-        className="rounded-lg"
+        className="rounded-lg border border-border bg-background"
       />
     </div>
-  );
+  )
 
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -85,12 +85,12 @@ function Feature({
         </>
       )}
     </div>
-  );
+  )
 }
 
 export default function FeatureSection() {
   return (
-    <div className="mx-auto w-3/5 rounded-3xl bg-white p-8">
+    <div className="mx-auto w-3/5 rounded-3xl bg-background p-8">
       <div className="flex flex-col gap-16">
         {features.map((feature) => (
           <Feature key={feature.number} {...feature} />
@@ -100,5 +100,5 @@ export default function FeatureSection() {
         <Button>Create a children's book</Button>
       </div>
     </div>
-  );
+  )
 }

@@ -1,12 +1,10 @@
-import { AdminDashboardLayout } from "./_components/admin-dashboard-layout";
+import React from 'react'
+import { AdminDashboardOverview } from './_Components/admin-dashboard-overview'
 
-
-export default function AdminDashboardPage() {
+function Admindashboard() {
   return (
-    <div>
-      <main className="w-[70%] mx-auto py-4">
-        <AdminDashboardLayout />
-      </main>    
-    </div>
-  );
+    <AdminDashboardOverview />
+  )
 }
+
+export default Admindashboard

@@ -2,6 +2,13 @@ import type { Context } from "hono";
 import { createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { prisma } from "../../db/index.js";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Response schema including isSubscribed
 const userStorybooksResponseSchema = z.object({
@@ -29,6 +36,7 @@ const userStorybooksResponseSchema = z.object({
           title: z.string(),
           coverImageUrl: z.string(),
         }),
+        previewUrl: z.string().nullable(),
       })
     ),
   }),
@@ -83,7 +91,7 @@ export const getUserStorybooksHandler = async (c: Context) => {
     // Determine if user has an active subscription
     const isSubscribed = userDetails.subscriptions.length > 0;
 
-    // Fetch user's projects/storybooks with template details
+    // Fetch user's projects/storybooks with template and generatedPages
     const projects = await prisma.project.findMany({
       where: { userId: user.id },
       include: {
@@ -97,6 +105,45 @@ export const getUserStorybooksHandler = async (c: Context) => {
       },
       orderBy: { createdAt: "desc" },
     });
+    
+    // Process each project to get a signed URL for the preview image
+    const processedProjects = await Promise.all(
+      projects.map(async (project) => {
+        let previewUrl: string | null = null;
+        
+        // Check if generatedPages and the preview path exist
+        if (project.generatedPages && typeof project.generatedPages === 'object' && 'firstPagePreviewPath' in project.generatedPages) {
+          const previewPath = (project.generatedPages as any).firstPagePreviewPath;
+          
+          if (previewPath) {
+            try {
+              // Generate a new signed URL
+              const { data, error } = await supabase.storage
+                .from("storybook-previews")
+                .createSignedUrl(previewPath, 60 * 60); // URL valid for 1 hour
+
+              if (error) {
+                console.error(`Error generating signed URL for ${previewPath}:`, error);
+              } else if (data?.signedUrl) {
+                previewUrl = data.signedUrl;
+              }
+            } catch (urlError) {
+              console.error(`Unexpected error generating signed URL for ${previewPath}:`, urlError);
+            }
+          }
+        }
+
+        return {
+          id: project.id,
+          title: project.title,
+          status: project.status,
+          createdAt: project.createdAt.toISOString(),
+          updatedAt: project.updatedAt.toISOString(),
+          template: project.template,
+          previewUrl: previewUrl,
+        };
+      })
+    );
 
     const response = {
       message: "User storybooks fetched successfully",
@@ -107,14 +154,7 @@ export const getUserStorybooksHandler = async (c: Context) => {
           updatedAt: userDetails.updatedAt.toISOString(),
           isSubscribed,
         },
-        storybooks: projects.map((project) => ({
-          id: project.id,
-          title: project.title,
-          status: project.status,
-          createdAt: project.createdAt.toISOString(),
-          updatedAt: project.updatedAt.toISOString(),
-          template: project.template,
-        })),
+        storybooks: processedProjects,
       },
     };
 

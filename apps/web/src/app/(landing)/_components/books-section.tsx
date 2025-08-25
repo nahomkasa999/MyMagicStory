@@ -30,9 +30,9 @@ const themes = [
 export function BooksSection() {
   return (
     <section className="py-12 w-[80%] m-auto md:py-20">
-      <div className="container mx-auto px-4 w-full md:w-10/12 bg-blue-50 rounded-2xl p-8">
+      <div className="container mx-auto px-4 w-full md:w-10/12 bg-background rounded-2xl p-8">
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">
             Books for every theme and occasion
           </h2>
         </div>
@@ -42,7 +42,7 @@ export function BooksSection() {
               key={index}
               variant="outline"
               className={cn(
-                "flex items-center justify-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow h-auto w-auto text-sm",
+                "flex items-center justify-center p-3 bg-secondary rounded-xl shadow-sm hover:shadow-md transition-shadow h-auto w-auto text-sm",
                 theme.className
               )}
             >
@@ -51,7 +51,7 @@ export function BooksSection() {
             </Button>
           ))}
           <Button
-            className="col-span-2 flex items-center justify-center p-3 bg-orange-500 text-white rounded-xl shadow-sm hover:shadow-md transition-shadow h-14 text-sm"
+            className="col-span-2 flex items-center justify-center p-3 bg-orange-500 text-foreground rounded-xl shadow-sm hover:shadow-md transition-shadow h-14 text-sm"
           >
             View all themes
           </Button>

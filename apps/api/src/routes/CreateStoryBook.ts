@@ -26,7 +26,7 @@ export const createPostRoute = createRoute({
             properties: {
               images: {
                 type: "array",
-                items: { type: "string", format: "binary" }, // files
+                items: { type: "string", format: "binary" },
               },
             },
             required: ["images"],
@@ -35,10 +35,11 @@ export const createPostRoute = createRoute({
       },
     },
   },
-  responses: { 200: { description: "PDF generated" } },
+  responses: { 200: { description: "PDF generated" } }
 });
 
 export const createPostHandler = async (c: Context) => {
+  console.log("hey");
   const id = c.req.param("id");
   if (!id) return c.json({ error: "Template ID is required" }, 400);
 
@@ -57,13 +58,11 @@ export const createPostHandler = async (c: Context) => {
       },
     });
 
-    // Check if the user is subscribed and has quota available
+
     const isSubscribedAndHasQuota = subscription && subscription.digitalBooksUsed < subscription.digitalBookQuota;
     
-    // Determine if this is a preview generation
     const isPreview = !isSubscribedAndHasQuota;
 
-    // If subscribed but quota is used up, return an error immediately
     if (subscription && !isSubscribedAndHasQuota) {
       return c.json({ error: "Subscription quota exceeded. Please upgrade your plan." }, 403);
     }
@@ -82,8 +81,8 @@ export const createPostHandler = async (c: Context) => {
         status: "DRAFT",
       },
     });
+        console.log("hellow world", project, storyTemplate, storyTemplate.layoutJson)
 
-    // --- Use PDFPageGenerator with uploaded frontend images ---
     const pdfPageGenerator = new PDFPageGenerator(
       storyTemplate,
       !isPreview,
@@ -93,22 +92,20 @@ export const createPostHandler = async (c: Context) => {
 
     const { layout, pages } = await pdfPageGenerator.generatePages();
 
-    // --- Generate PDF ---
-    const pdfGenerator = new EnhancedPDFGenerator();
+    const pdfGenerator = new EnhancedPDFGenerator(supabase);
     const result = await pdfGenerator.generatePDF(layout, pages, {
       outputFormat: "print",
       generatePreviews: false,
-      uploadToStorage: false,
+      generateFirstPagePreview: true,
+      projectId: project.id,
     });
 
-    // --- Clean up local image files if any ---
     pages.forEach((page) => {
       if (page.imagePath) {
         try { fs.unlinkSync(page.imagePath); } catch {}
       }
     });
 
-    // --- Upload PDF to Supabase ---
     const pdfFileName = `projects/${project.id}/storybook.pdf`;
     const { error: pdfUploadError } = await supabase.storage
       .from("storybook-pdfs")
@@ -125,7 +122,6 @@ export const createPostHandler = async (c: Context) => {
     if (pdfSignedError)
       return c.json({ error: "Failed to generate download link" }, 500);
 
-    // --- Fetch signed URLs for all images in case some already existed ---
     const uploadedImages = await prisma.uploadedImage.findMany({
       where: { projectId: project.id },
       select: { imageUrl: true },
@@ -139,7 +135,6 @@ export const createPostHandler = async (c: Context) => {
       if (!error && data?.signedUrl) imageUrls.push(data.signedUrl);
     }
 
-    // Update project metadata
     await prisma.project.update({
       where: { id: project.id },
       data: {
@@ -152,12 +147,13 @@ export const createPostHandler = async (c: Context) => {
             generatedAt: new Date().toISOString(),
             isPreview: isPreview,
           },
+          firstPagePreviewUrl: result.firstPagePreviewUrl || null,
+          firstPagePreviewPath: result.firstPagePreviewPath || null,
         },
         updatedAt: new Date(),
       },
     });
 
-    // Increment quota only if a full book was generated
     if (!isPreview) {
       await prisma.project.update({
         where: {id: project.id},
