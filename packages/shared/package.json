@@ -13,7 +13,11 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "typescript": "latest"
+    "typescript": "latest",
+    "react-hook-form": "^7.62.0"
+  },
+  "peerDependencies": {
+    "react-hook-form": "^7.62.0"
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.0.2",

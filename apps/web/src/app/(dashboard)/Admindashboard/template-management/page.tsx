@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import { Template, TemplateGrid } from './_Components/admin-template-grid'
 import { TemplateManagementHeader } from './_Components/admin-template-header'; 
+import { useRouter } from 'next/navigation';
 
 // Mock data for demonstration
 const mockTemplates: Template[] = [
@@ -16,6 +17,7 @@ const mockTemplates: Template[] = [
 function AdminTemplate() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const router = useRouter(); 
 
   // Filter templates based on search query and status filter
   const filteredTemplates = useMemo(() => {
@@ -27,8 +29,7 @@ function AdminTemplate() {
   }, [searchQuery, statusFilter]);
 
   const handleCreateTemplate = () => {
-    // Implement logic to create a new template here
-    console.log("Create new template clicked!");
+    router.push('/Admindashboard/template-management/create');
   };
 
   return (

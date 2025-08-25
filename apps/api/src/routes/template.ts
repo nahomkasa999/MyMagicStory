@@ -2,18 +2,20 @@ import { createRoute } from '@hono/zod-openapi';
 import { z } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { prisma } from '../db/index.js';
+import { templateFormSchema } from '@mymagicstory/shared/types';
+import { TemplateCrud } from '../services/crud/templatecrud.js';
+// Instantiate the TemplateCrud class with the Prisma client
+const templateCrud = new TemplateCrud(prisma);
 
-const templateSchema = z.object({
-  title: z.string(),
-  layoutJson: z.any(),
-});
+// Use the imported templateFormSchema directly
+const templateSchema = templateFormSchema;
 
 const templateResponseSchema = z.object({
   message: z.string(),
   data: z.object({
     id: z.string(),
     title: z.string(),
-    layoutJson: z.any(),
+    layoutJson: templateFormSchema, 
     createdAt: z.date(),
     updatedAt: z.date(),
   }),
@@ -56,20 +58,19 @@ export const createTemplateRoute = createRoute({
 });
 
 export const createTemplateHandler = async (c: Context) => {
+  console.log("hellow");
   try {
     const body = await c.req.json();
     const validatedBody = templateSchema.parse(body);
-    const { title } = validatedBody;
 
-    const template = await prisma.storyTemplate.create({
-      data: {
-        title,
-        description: title,
-        layoutJson: body,
-        coverImageUrl: '', 
-        previewPages: 3
-      },
+    // Use the TemplateCrud class to create the template
+    const template = await templateCrud.create({
+      ...validatedBody,
+      coverImageUrl: '', 
+      previewPages: 3,
     });
+    
+    console.log("created");
 
     const responseData = {
       id: template.id,

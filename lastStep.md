@@ -1,614 +1,399 @@
-.
-├── .gitignore
-├── .npmrc
-├── .kilocode/
-├── .vscode/
-├── apps/
-│   ├── api/
-│   │   ├── .gitignore
-│   │   ├── .npmrc
-│   │   ├── package.json
-│   │   ├── photo_gen_1.png
-│   │   ├── tsconfig.json
-│   │   ├── prisma/
-│   │   │   ├── schema.prisma
-│   │   │   └── migrations/
-│   │   │       ├── migration_lock.toml
-│   │   │       ├── 20250816083719_init/
-│   │   │       │   └── migration.sql
-│   │   │       └── 20250822051551_subscription/
-│   │   │           └── migration.sql
-│   │   ├── src/
-│   │   │   ├── app.ts
-│   │   │   ├── frontend.ts
-│   │   │   ├── index.ts
-│   │   │   ├── db/
-│   │   │   │   └── index.ts
-│   │   │   ├── generated/
-│   │   │   │   └── prisma/
-│   │   │   │       └── runtime/
-│   │   │   ├── middleware/
-│   │   │   │   └── auth.ts
-│   │   │   ├── routes/
-│   │   │   │   ├── auth.ts
-│   │   │   │   ├── CreateStoryBook.ts
-│   │   │   │   ├── pdf-preview.ts
-│   │   │   │   ├── secure-image-url.ts
-│   │   │   │   ├── template.ts
-│   │   │   │   └── user/
-│   │   │   │       ├── choiceTemplate.ts
-│   │   │   │       └── storybooks.ts
-│   │   │   ├── services/
-│   │   │   │   └── pdf/
-│   │   │   │       ├── generator.ts
-│   │   │   │       ├── index.ts
-│   │   │   │       ├── preview.ts
-│   │   │   │       ├── README.md
-│   │   │   │       └── types.ts
-│   │   │   └── supabase/
-│   │   │       └── client.ts
-│   │   └── tools/
-│   │       └── pdfjs-dist/
-│   │           ├── LICENSE
-│   │           ├── README.md
-│   │           └── ... (omitted for brevity)
-│   └── web/
-│       ├── .gitignore
-│       ├── middleware.ts
-│       ├── next.config.ts
-│       ├── package.json
-│       ├── postcss.config.mjs
-│       ├── public/
-│       └── src/
-│           ├── app/
-│           │   ├── (auth)/
-│           │   │   ├── layout.tsx
-│           │   │   ├── _hook/
-│           │   │   │   └── useAuth.ts
-│           │   │   ├── forgot-password/
-│           │   │   │   └── page.tsx
-│           │   │   ├── reset-password/
-│           │   │   │   └── page.tsx
-│           │   │   ├── signin/
-│           │   │   │   └── page.tsx
-│           │   │   └── signup/
-│           │   │       └── page.tsx
-│           │   ├── (dashboard)/
-│           │   │   ├── Admindashboard/
-│           │   │   │   ├── layout.tsx
-│           │   │   │   ├── page.tsx
-│           │   │   │   └── _components/
-│           │   │   │       ├── admin-dashboard-layout.tsx
-│           │   │   │       ├── admin-navbar.tsx
-│           │   │   │       ├── revenue-tracking.tsx
-│           │   │   │       ├── storybook-statistics.tsx
-│           │   │   │       └── user-statistics.tsx
-│           │   │   └── dashboard/
-│           │   │       ├── _components/
-│           │   │       │   └── dashboard-layout.tsx
-│           │   │       ├── _hooks/
-│           │   │       ├── account/
-│           │   │       ├── choicetemplate/
-│           │   │       │   └── _hooks/
-│           │   │       └── create/
-│           │   │           └── [id]/
-│           │   │               ├── _components/
-│           │   │               └── _hooks/
-│           │   ├── (landing)/
-│           │   │   └── _components/
-│           │   ├── check/
-│           │   └── hooks/
-│           ├── components/
-│           │   └── ui/
-│           ├── lib/
-│           │   └── supabase/
-│           ├── providers/
-│           └── types/
-├── packages/
-│   ├── eslint-config/
-│   ├── shared/
-│   │   └── src/
-│   │       └── types/
-│   └── typescript-config/
-└── prompts/
+cna you make a good job description,
 
-"use client"
+the job is that the a Crud website Archtect expert it will be provided with the schema and stack to use and he must build the website
 
-import { useState } from "react"
-import {
-  BarChart3,
-  FileText,
-  Users,
-  FolderOpen,
-  DollarSign,
-  Activity,
-  LayoutTemplate,
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Copy,
-  Archive,
-  Trash2,
-  TrendingUp,
-  TrendingDown,
-} from "lucide-react"
+when he do so  he must follow the following thing
+ -> the companies custom, file structure, and stack.
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+"
+the person uses hono / node.js, tanstack for fethcing, better-fetch(search internet to know about this like its a type safe fethcing similar to fetcher but for type script), frontend is Next.js, all all calls to the back end are made by hooks, 
+"
 
-const sidebarItems = [
-  {
-    title: "Dashboard",
-    icon: BarChart3,
-    id: "dashboard",
+so the person main responsiblity will be to see the database, and then plan the flow all in json
+
+e.g this website will have this this this pages according to your input, and looking at the database this page needs this and this and this tables information, 
+
+so the frontend is will expect this kind of data (zod schema), and the backend should send this kind of data,
+
+inorder the backend to send this data the backend will make a request to the this and this table aggreate(if need ...).. and prepare the data to be send to the frontend in this way,
+
+or if we provided the frontend expectation of datas,
+
+the person should make the backend abel to send that json to the fornend. planing how to change the database tabel information to the json the fronend what's is his job.
+
+next he will plan how to use good fetching habit for using tanstack, prevent common pet falls like route fetches, not caching data and freshnes.... 
+and also when using tanstack he must use the better-fetch...
+"
+then he must come up with a good comprehensive types, both for the frontend and the backend
+"
+this is one example how we use betterfetch
+"
+"use client";
+
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase/supabaseClient";
+import { createFetch, createSchema } from "@better-fetch/fetch";
+import { z } from "zod";
+import { toast } from "sonner";
+import { signupSchema, userResponseSchema } from "../../../../types/authtypes";
+import { useRouter } from "next/navigation";
+import type { UserResponse } from "@supabase/supabase-js";
+
+// --- API Schema and Fetch Instance ---
+export const schema = createSchema({
+  "/signup": {
+    input: signupSchema,
+    output: userResponseSchema,
   },
-  {
-    title: "Template Management",
-    icon: LayoutTemplate,
-    id: "templates",
-  },
-  {
-    title: "Blog Management",
-    icon: FileText,
-    id: "blog",
-  },
-  {
-    title: "User Management",
-    icon: Users,
-    id: "users",
-  },
-  {
-    title: "Content & Projects",
-    icon: FolderOpen,
-    id: "projects",
-  },
-  {
-    title: "Financial Tracking",
-    icon: DollarSign,
-    id: "financial",
-  },
-  {
-    title: "System Health",
-    icon: Activity,
-    id: "system",
-  },
-]
+});
 
-const mockTemplates = [
-  {
-    id: 1,
-    name: "Adventure Story",
-    status: "published",
-    preview: "/adventure-story-template-preview.png",
-  },
-  {
-    id: 2,
-    name: "Fairy Tale",
-    status: "draft",
-    preview: "/fairy-tale-template-preview.png",
-  },
-  {
-    id: 3,
-    name: "Mystery Book",
-    status: "published",
-    preview: "/mystery-book-template-preview.png",
-  },
-  {
-    id: 4,
-    name: "Educational Story",
-    status: "archived",
-    preview: "/educational-story-template-preview.png",
-  },
-  {
-    id: 5,
-    name: "Fantasy Adventure",
-    status: "published",
-    preview: "/fantasy-adventure-template-preview.png",
-  },
-  {
-    id: 6,
-    name: "Science Fiction",
-    status: "draft",
-    preview: "/science-fiction-template-preview.png",
-  },
-]
+const $fetch = createFetch({
+  baseURL: "http://localhost:3001",
+  schema,
+});
 
-export default function AdminDashboard() {
-  const [activeSection, setActiveSection] = useState("dashboard")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+// --- Mutation Functions ---
+interface SignupArgs {
+  username: string;
+  email: string;
+  password: string;
+}
 
-  const filteredTemplates = mockTemplates.filter((template) => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || template.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+async function signupUser({ username, email, password }: SignupArgs) {
+  toast("Signing up...");
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { username },
+    },
+  });
+  if (error) {
+    throw error;
+  }
+  return data;
+}
 
-  const renderDashboardOverview = () => (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground">Monitor your platform's performance and key metrics</p>
-      </div>
+interface LoginArgs {
+  email: string;
+  password: string;
+}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2,847</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" />
-                +12.5%
-              </span>
-              from last month
-            </p>
-          </CardContent>
-        </Card>
+async function loginUser({ email, password }: LoginArgs) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
+    throw error;
+  }
+  return data;
+}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Subscribers</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" />
-                +8.2%
-              </span>
-              from last month
-            </p>
-          </CardContent>
-        </Card>
+interface ResetPasswordArgs {
+  email: string;
+}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projects Generated</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">15,678</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" />
-                +23.1%
-              </span>
-              from last month
-            </p>
-          </CardContent>
-        </Card>
+async function resetPasswordEmail({ email }: ResetPasswordArgs) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+  if (error) {
+    throw error;
+  }
+}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$3,247</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-red-600 flex items-center gap-1">
-                <TrendingDown className="h-3 w-3" />
-                +5.4%
-              </span>
-              from last month
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+interface ChangePasswordArgs {
+  currentPassword: string;
+  newPassword: string;
+}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest user signups and project generations</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">New user registration</p>
-                <p className="text-xs text-muted-foreground">john.doe@example.com - 2 minutes ago</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Project generated</p>
-                <p className="text-xs text-muted-foreground">"My Adventure Story" - 5 minutes ago</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Subscription upgrade</p>
-                <p className="text-xs text-muted-foreground">Premium plan - 12 minutes ago</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>System Status</CardTitle>
-            <CardDescription>Current system health and performance</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">API Response Time</span>
-              <Badge variant="secondary">142ms</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Database Status</span>
-              <Badge className="bg-green-500">Healthy</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Storage Usage</span>
-              <Badge variant="outline">67% (2.1TB)</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Active Jobs</span>
-              <Badge variant="secondary">3 pending</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
-
-  const renderTemplateManagement = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Template Management</h1>
-          <p className="text-muted-foreground">Create, edit, and manage your story templates</p>
-        </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Template
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search templates..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 bg-transparent">
-              <Filter className="h-4 w-4" />
-              Status: {statusFilter === "all" ? "All" : statusFilter}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setStatusFilter("all")}>All Templates</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setStatusFilter("published")}>Published</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setStatusFilter("draft")}>Draft</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setStatusFilter("archived")}>Archived</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {filteredTemplates.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-16">
-          <LayoutTemplate className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No templates found</h3>
-          <p className="text-muted-foreground text-center mb-6">
-            {searchQuery || statusFilter !== "all"
-              ? "Try adjusting your search or filter criteria"
-              : "Get started by creating your first template"}
-          </p>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Your First Template
-          </Button>
-        </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTemplates.map((template) => (
-            <Card key={template.id} className="overflow-hidden">
-              <div className="aspect-video bg-muted">
-                <img
-                  src={template.preview || "/placeholder.svg"}
-                  alt={`${template.name} preview`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{template.name}</CardTitle>
-                  <Badge
-                    variant={
-                      template.status === "published"
-                        ? "default"
-                        : template.status === "draft"
-                          ? "secondary"
-                          : "outline"
-                    }
-                    className={
-                      template.status === "published"
-                        ? "bg-green-500"
-                        : template.status === "draft"
-                          ? "bg-yellow-500"
-                          : ""
-                    }
-                  >
-                    {template.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" className="gap-2 bg-transparent">
-                    <Eye className="h-3 w-3" />
-                    Preview
-                  </Button>
-                  <Button size="sm" variant="outline" className="gap-2 bg-transparent">
-                    <Edit className="h-3 w-3" />
-                    Edit
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="outline">
-                        <MoreHorizontal className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="gap-2">
-                        <Copy className="h-3 w-3" />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2">
-                        <Archive className="h-3 w-3" />
-                        Archive
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2 text-destructive">
-                        <Trash2 className="h-3 w-3" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-
-  const renderPlaceholderSection = (title: string, description: string) => (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-        <p className="text-muted-foreground">{description}</p>
-      </div>
-      <Card className="flex flex-col items-center justify-center py-16">
-        <div className="text-6xl mb-4">🚧</div>
-        <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
-        <p className="text-muted-foreground text-center">
-          This section is under development and will be available soon.
-        </p>
-      </Card>
-    </div>
-  )
-
-  const renderContent = () => {
-    switch (activeSection) {
-      case "dashboard":
-        return renderDashboardOverview()
-      case "templates":
-        return renderTemplateManagement()
-      case "blog":
-        return renderPlaceholderSection("Blog Management", "Create, publish, and manage your blog content")
-      case "users":
-        return renderPlaceholderSection("User Management", "Manage user accounts and subscriptions")
-      case "projects":
-        return renderPlaceholderSection("Content & Projects", "View and manage generated projects")
-      case "financial":
-        return renderPlaceholderSection("Financial Tracking", "Monitor costs and revenue analytics")
-      case "system":
-        return renderPlaceholderSection("System Health", "Monitor system performance and logs")
-      default:
-        return renderDashboardOverview()
-    }
+async function changePasswordUser({ currentPassword, newPassword }: ChangePasswordArgs) {
+  // First verify current password by attempting to sign in
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) {
+    throw new Error("No user found");
   }
 
-  return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar variant="inset">
-          <SidebarHeader className="border-b border-sidebar-border">
-            <div className="flex items-center gap-2 px-2 py-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <LayoutTemplate className="h-4 w-4" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold">Admin Dashboard</span>
-                <span className="text-xs text-muted-foreground">Story Platform</span>
-              </div>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {sidebarItems.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        isActive={activeSection === item.id}
-                        onClick={() => setActiveSection(item.id)}
-                        className="w-full"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-          <SidebarFooter className="border-t border-sidebar-border">
-            <div className="flex items-center gap-2 px-2 py-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                <span className="text-xs font-medium">AD</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Admin User</span>
-                <span className="text-xs text-muted-foreground">admin@platform.com</span>
-              </div>
-            </div>
-          </SidebarFooter>
-          <SidebarRail />
-        </Sidebar>
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Admin Dashboard</span>
-              <span>/</span>
-              <span className="text-foreground">
-                {sidebarItems.find((item) => item.id === activeSection)?.title || "Dashboard"}
-              </span>
-            </div>
-          </header>
-          <main className="flex-1 p-6">{renderContent()}</main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
-  )
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+
+  if (signInError) {
+    throw new Error("Current password is incorrect");
+  }
+
+  // Update password
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    throw error;
+  }
 }
+
+async function logoutUser() {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    throw error;
+  }
+}
+
+// --- React Query Hook ---//
+export function useAuth() {
+  const router = useRouter();
+
+  const signup = useMutation({
+    mutationFn: signupUser,
+    onSuccess: async (supabaseResponse) => {
+      const user = supabaseResponse.user;
+      if (!user) {
+        toast.error("No user returned from Supabase");
+        return;
+      }
+      try {
+        await $fetch("/signup", {
+          body: {
+            id: user.id,
+            email: user.email!,
+            name: user.user_metadata?.username ?? null,
+            role: "USER",
+            avatarUrl: user.user_metadata?.avatar_url ?? undefined,
+          },
+        });
+        toast.success(
+          "Signed up successfully. Please check your email to confirm."
+        );
+      } catch (error: any) {
+        console.log(error)
+        toast.success(
+          "Signed up successfully. Please check your email to confirm."
+        );
+      }
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error("Signing up failed. Internal error");
+    },
+  });
+
+  const login = useMutation({
+    mutationFn: loginUser,
+    onSuccess: () => {
+      toast.success("Login successful!");
+    },
+    onError: () => {
+      toast.error("Login failed. Please check your credentials");
+    },
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: resetPasswordEmail,
+    onSuccess: () => {
+      toast.success("Password reset email sent! Check your inbox.");
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error("Failed to send reset email. Please try again.");
+    },
+  });
+
+  const changePassword = useMutation({
+    mutationFn: changePasswordUser,
+    onSuccess: () => {
+      toast.success("Password updated successfully!");
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error(
+        err.message || "Failed to update password. Please try again."
+      );
+    },
+  });
+
+  const logout = useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
+      toast.success("Logged out successfully!");
+      router.push("/");
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error("Failed to logout. Please try again.");
+    },
+  });
+
+  return { signup, login, resetPassword, changePassword, logout };
+}
+"
+but the tanstack query can be improved to handle different htings,
+"
+
+mostly our file structure follows that of Next.js guide
+
+(group) e.g (dashboard)
+   _ Components(components for dashboard)
+  _hooks (the place were it diffines the to get things from the backedn in type safe way)
+  create ( another route)
+   _Coponents
+  _ hooks
+  layout.tsx
+ page.tsx
+  layout.tsx (dashboard layout)
+  page.tsx (dashabord page.tsx)
+
+for the backend we are using hono, so ya most things happen in the src. 
+fro the backend its appreaciated if it uses classes to plan things so that the class can be changed fast to real thing
+
+e.g 
+ like this
+```typescript
+// Import necessary libraries for PDF generation, database, and image handling.
+import type { LayoutJSON, PageRenderData, LegacyPage } from "./types.js";
+import { layoutJsonSchema, legacyLayoutJsonSchema } from "./types.js";
+// ... other imports
+
+// Initialize external services like Replicate for AI and Supabase for storage.
+const replicate = new Replicate(/* ... */);
+const supabase = createClient(/* ... */);
+
+// Declare the PDFPageGenerator class to handle PDF page creation.
+export class PDFPageGenerator {
+  // Holds the final, validated layout for the PDF.
+  layout: LayoutJSON;
+  // Stores the initial story template data.
+  storyTemplate: any;
+  // Flag to check if the user has a full subscription.
+  subscription: boolean;
+  // The unique ID for the current project.
+  projectId: string;
+  // Optional images uploaded from the frontend.
+  frontendImages?: File[];
+  // Stores URLs for images to be used in generation.
+  imageUrls: string[] = [];
+
+  // Constructor: Initializes the generator with story data and project details.
+  constructor(
+    storyTemplate: any,
+    isFullGeneration: boolean,
+    projectId: string,
+    frontendImages?: File[]
+  ) {
+    // It tries to parse the modern layout format first.
+    // If that fails, it assumes a legacy format and converts it.
+  }
+
+  // Converts an old layout format to the new, structured format.
+  private convertLegacyLayout(legacyLayout: any): LayoutJSON {
+    // Maps legacy pages to a new format with default styles.
+  }
+
+  // Prepares image URLs for the story.
+  private async prepareImageUrls(): Promise<void> {
+    // 1. If new images were uploaded, it sends them to Supabase storage.
+    // 2. It then fetches all image URLs (new and existing) for the project.
+    // 3. It creates signed URLs for them to be used by the image generation AI.
+  }
+
+  // Main method to generate the content for each page.
+  async generatePages(
+    pagesAlreadyGenerated: number = 0
+  ): Promise<{ layout: LayoutJSON; pages: PageRenderData[] }> {
+    // 1. Prepare all image URLs.
+    await this.prepareImageUrls();
+
+    // 2. Determine which pages to process based on subscription status and previous progress.
+    //    - Free users get a limited number of pages.
+    let pagesToProcess = [...this.layout.pages];
+    
+    // 3. Filter out the pages that need image generation.
+    const imagePages = /* ... */;
+
+    // 4. Concurrently generate images for the image pages using the Replicate AI.
+    //    - It includes a retry mechanism in case of failure.
+    const imageResults = await pMap(imagePages, /* ... */);
+
+    // 5. Assemble the final page data.
+    //    - For text pages, it adds the text content.
+    //    - For image pages, it adds the path to the generated image.
+    //    - If image generation failed, it adds a placeholder error message.
+    for (const page of pagesToProcess) {
+      // ... logic to assemble pages
+    }
+
+    // 6. Return the final layout and the generated page data.
+    return { layout: this.layout, pages: allPages };
+  }
+}
+```
+We want to structure our code so that each responsibility is separated clearly. The idea is to have a dedicated class that handles all CRUD operations for a specific resource (in this case, blogs), while other concerns like validation are handled in their own classes. This keeps the code maintainable, testable, and scalable.
+
+1. CRUD Class
+
+Create a BlogCrud class responsible only for database interactions and transformations required for storage. It should not handle validation or other business logic.
+
+Example methods:
+
+createBlog(input: BlogCreateInput): BlogType
+
+updateBlog(id: string, input: BlogUpdateInput): BlogType
+
+deleteBlog(id: string): boolean
+
+getBlog(id: string): BlogType | null
+
+Each method receives input, performs the necessary Prisma or database operations, and returns the output in the expected format.
+
+2. Validation Class
+
+Create a separate BlogValidator class responsible for input validation. This class ensures that data coming from the frontend meets the required structure and rules.
+
+Example methods:
+
+validateCreate(input: unknown): BlogCreateInput
+
+validateUpdate(input: unknown): BlogUpdateInput
+
+By separating validation, we keep the CRUD class focused and reusable.
+
+3. API Route Usage
+
+The API route acts as a coordinator. The flow should be:
+
+Receive the request.
+
+Validate the input using BlogValidator.
+
+Call the appropriate method in BlogCrud.
+
+Return the result as the API response.
+
+Example:
+
+const input = BlogValidator.validateCreate(req.body)
+const result = new BlogCrud().createBlog(input)
+return res.json(result)
+
+Why This Works
+
+Single Responsibility: Each class does one thing—CRUD or validation—making code easier to maintain and extend.
+
+Reusability: BlogCrud can be used in multiple contexts: API routes, background jobs, tests, etc.
+
+Testability: Classes can be tested independently or together, which simplifies writing unit and integration tests.
+
+Scalability: When the app grows, additional business logic can be added in separate service classes without bloating CRUD or validator classes.
+
+Mental Model
+
+Think of it like an assembly line:
+
+Validator → ensures input is correct and safe.
+
+CRUD class → handles all database operations.
+
+API route → orchestrates validation and CRUD, and returns the response.
+
+This pattern keeps responsibilities clear, code clean, and makes future changes easier.
