@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { createFetch, createSchema } from '@better-fetch/fetch';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -43,6 +43,7 @@ const $fetch = createFetch({
 });
 
 export function useTemplate() {
+  const queryClient = useQueryClient();
   const router = useRouter(); 
 
   const createTemplate = useMutation({
@@ -60,7 +61,8 @@ export function useTemplate() {
     onSuccess: (data) => {
       console.log(data);
       toast.success('Template created successfully!');
-      router.push('/Admindashboard/template-managment');
+      router.push('/Admindashboard/template-management');
+      queryClient.invalidateQueries({ queryKey: ['templates'] })
     },
     onError: (err: any) => {
       console.error(err);

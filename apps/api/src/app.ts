@@ -16,7 +16,17 @@ import { CreateUserInDBHandler, CreateUserInDB } from "./routes/auth.js";
 import {
   createTemplateRoute,
   createTemplateHandler,
-} from "./routes/template.js";
+  getTemplatesRoute,
+  getTemplatesHandler,
+  getOneTemplateRoute,
+  getOneTemplateHandler,
+  updateTemplateRoute,
+  updateTemplateHandler,
+  deleteOneTemplateRoute,
+  deleteOneTemplateHandler,
+  deleteManyTemplatesRoute,
+  deleteManyTemplatesHandler,
+} from "./routes/template.js"; // Import all new template routes and handlers
 import {
   getAllTemplatesRoute,
   getAllTemplatesHandler,
@@ -54,36 +64,36 @@ app.onError((err, c) => {
   );
 });
 
-app.use("/template", supabaseAuth)
-app.use("/user/storybooks", supabaseAuth)
-app.use("/user/templates", supabaseAuth)
-app.use("/post-data/*", supabaseAuth)
-
-//dashbaord grid
-app.use("/generate-previews", supabaseAuth)
-app.use("/previews/*", supabaseAuth)
-app.use("/project/*", supabaseAuth)
-//stirpe authenticated
-app.use("/payment/*", supabaseAuth)
+// All template routes are now authenticated
+app.use("/templates/*", supabaseAuth);
 
 //authentication
-app.openapi(CreateUserInDB, CreateUserInDBHandler )
+app.openapi(CreateUserInDB, CreateUserInDBHandler );
 
-app.openapi(getUsersRoute,  getUsersHandler)
+app.openapi(getUsersRoute,  getUsersHandler);
 app.openapi(createPostRoute, createPostHandler);
 app.openapi(getSecureImageUrlRoute, getSecureImageUrlHandler);
+
+// --- All Template CRUD Routes ---
+// The path for all templates should be /templates, not /template
 app.openapi(createTemplateRoute, createTemplateHandler);
+app.openapi(getTemplatesRoute, getTemplatesHandler);
+app.openapi(getOneTemplateRoute, getOneTemplateHandler);
+app.openapi(updateTemplateRoute, updateTemplateHandler);
+app.openapi(deleteOneTemplateRoute, deleteOneTemplateHandler);
+app.openapi(deleteManyTemplatesRoute, deleteManyTemplatesHandler);
+// --- End of Template CRUD Routes ---
+
 app.openapi(getAllTemplatesRoute, getAllTemplatesHandler);
 app.openapi(getUserStorybooksRoute, getUserStorybooksHandler);
 
 // dashbaord story book generation place.
 app.openapi(getProjectPdfRoute, getProjectPdfHandler);
 //stripe
-app.openapi(checkoutRoute, checkoutHandler)
-app.openapi(buyBookRoute, buyBookHandler)
-app.openapi(verifyAndGenerateRoute, verifyAndGenerateHandler)
-app.openapi(stripeWebhookRoute, stripeWebhookHandler)
-
+app.openapi(checkoutRoute, checkoutHandler);
+app.openapi(buyBookRoute, buyBookHandler);
+app.openapi(verifyAndGenerateRoute, verifyAndGenerateHandler);
+app.openapi(stripeWebhookRoute, stripeWebhookHandler);
 
 
 app.get("/ui", swaggerUI({ url: "/doc" }));

@@ -1,21 +1,21 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Plus, Filter } from "lucide-react"
+// Removed DropdownMenu imports as status filter is removed
+import { Search, Plus } from "lucide-react" // Removed Filter icon
 
 interface TemplateManagementHeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  statusFilter: string;
-  setStatusFilter: (status: string) => void;
+  // Removed statusFilter and setStatusFilter props
   onCreateTemplate: () => void;
 }
 
 export function TemplateManagementHeader({
   searchQuery,
   setSearchQuery,
-  statusFilter,
-  setStatusFilter,
+  // Removed statusFilter, setStatusFilter from destructuring
   onCreateTemplate
 }: TemplateManagementHeaderProps) {
   return (
@@ -41,20 +41,7 @@ export function TemplateManagementHeader({
             className="pl-10"
           />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 bg-transparent">
-              <Filter className="h-4 w-4" />
-              Status: {statusFilter === "all" ? "All" : statusFilter}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setStatusFilter("all")}>All Templates</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setStatusFilter("published")}>Published</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setStatusFilter("draft")}>Draft</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setStatusFilter("archived")}>Archived</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Removed DropdownMenu for status filtering */}
       </div>
     </div>
   )
